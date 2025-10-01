@@ -102,7 +102,7 @@ export function AiProductForm() {
     const productData = {
       id: new Date().toISOString(),
       name: productName,
-      price: parseFloat(price),
+      price: price,
       features: formData.get('productFeatures'),
       category: formData.get('productCategory'),
       description: productDescription,
@@ -110,17 +110,23 @@ export function AiProductForm() {
     };
     
     try {
-        const existingProducts = JSON.parse(localStorage.getItem('products') || '[]');
-        localStorage.setItem('products', JSON.stringify([...existingProducts, productData]));
+        const existingProductsRaw = localStorage.getItem('products');
+        const existingProducts = existingProductsRaw ? JSON.parse(existingProductsRaw) : [];
+        const updatedProducts = [...existingProducts, productData];
+        localStorage.setItem('products', JSON.stringify(updatedProducts));
+        
         toast({
             title: 'Product Published!',
             description: `${productName} has been saved.`,
         });
         // Optionally clear the form
-        formRef.current.reset();
+        if (formRef.current) {
+          formRef.current.reset();
+        }
         setProductDescription('');
         setImagePreview(null);
     } catch (error) {
+        console.error("Error saving product:", error);
         toast({
             title: 'Error Saving Product',
             description: 'There was an issue saving your product to local storage.',
