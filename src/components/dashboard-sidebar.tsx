@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import Link from 'next/link';
@@ -85,7 +83,7 @@ export function DashboardSidebar({ children }: { children: React.ReactNode }) {
                 <Header />
             </div>
             <MobileHeader />
-            <div className="flex-1 md:grid md:grid-cols-[auto_1fr]">
+            <div className="flex-1 md:grid md:grid-cols-[auto_1fr] pt-20">
                 <Sidebar>
                 <SidebarHeader className='hidden md:flex'>
                     <div className="flex items-center gap-2">
@@ -165,7 +163,7 @@ export function AdminDashboardSidebar({ children }: { children: React.ReactNode 
                 <Header />
             </div>
             <MobileHeader />
-            <div className="flex-1 md:grid md:grid-cols-[auto_1fr]">
+            <div className="flex-1 md:grid md:grid-cols-[auto_1fr] pt-20">
                 <Sidebar>
                 <SidebarHeader className="hidden md:flex">
                     <div className="flex items-center gap-2">
