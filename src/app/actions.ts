@@ -15,10 +15,6 @@ const formSchema = z.object({
 });
 
 export async function generateDescriptionAction(
-  prevState: {
-    message: string;
-    description: string;
-  },
   formData: FormData
 ) {
   const validatedFields = formSchema.safeParse({

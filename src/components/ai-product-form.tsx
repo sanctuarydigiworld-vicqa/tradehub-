@@ -19,10 +19,7 @@ export function AiProductForm() {
 
   const handleFormAction = async (formData: FormData) => {
     setIsLoading(true);
-    const result = await generateDescriptionAction({
-        message: '',
-        description: ''
-    }, formData);
+    const result = await generateDescriptionAction(formData);
     setIsLoading(false);
 
     if (result.message && result.message !== 'Description generated successfully.') {
@@ -75,7 +72,7 @@ export function AiProductForm() {
                     <CardDescription>
                         Fine-tune the AI to match your brand's voice.
                     </CardDescription>
-                </CardHeader>
+                </Header>
                 <CardContent className="grid gap-4 sm:grid-cols-2">
                 <div className="grid gap-2">
                     <Label htmlFor="productCategory">Product Category</Label>
