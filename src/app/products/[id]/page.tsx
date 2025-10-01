@@ -19,6 +19,8 @@ import {
   Share2,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 export default function ProductPage({ params }: { params: { id: string } }) {
   const product = products.find((p) => p.id === params.id);
