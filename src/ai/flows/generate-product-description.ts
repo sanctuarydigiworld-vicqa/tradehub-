@@ -39,18 +39,19 @@ const prompt = ai.definePrompt({
   name: 'generateProductDescriptionPrompt',
   input: {schema: GenerateProductDescriptionInputSchema},
   output: {schema: GenerateProductDescriptionOutputSchema},
-  prompt: `You are an expert copywriter specializing in product descriptions.
+  prompt: `You are an expert copywriter specializing in creating compelling product descriptions.
+Your task is to write a product description based on the provided details.
+The output should only be the product description itself, formatted according to the specified style.
 
-  Based on the following product information, generate a compelling and attractive product description.
+## Product Details ##
+Product Name: {{{productName}}}
+Features: {{{productFeatures}}}
+Category: {{{productCategory}}}
+Target Audience: {{{targetAudience}}}
+Tone & Style: {{{stylePreferences}}}
 
-  Product Name: {{{productName}}}
-  Product Features: {{{productFeatures}}}
-  Product Category: {{{productCategory}}}
-  Target Audience: {{{targetAudience}}}
-  Style Preferences: {{{stylePreferences}}}
-  
-  Write a product description that highlights the key features and benefits of the product, while considering the target audience and style preferences.
-  `,
+## Generated Product Description ##
+`,
 });
 
 const generateProductDescriptionFlow = ai.defineFlow(
