@@ -29,7 +29,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 
 export default function Header() {
-  const { user, loading } = useAuth();
+  const { user, loading } = { user: { email: 'vendor@example.com', displayName: 'Vendor Name' }, loading: false };
   const { toast } = useToast();
   const router = useRouter();
 
