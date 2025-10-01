@@ -32,8 +32,8 @@ export default function ProductsPage() {
   useEffect(() => {
     try {
       const localProducts = JSON.parse(localStorage.getItem('products') || '[]');
-      // A simple way to merge and avoid duplicates. A real app would need a better strategy.
       const combinedProducts = [...initialProducts];
+      
       localProducts.forEach((localProduct: any) => {
           if(!combinedProducts.find(p => p.id === localProduct.id)) {
             // Mapping local storage structure to Product type
@@ -46,14 +46,32 @@ export default function ProductsPage() {
               vendor: 'Current Vendor',
               image: {
                 id: localProduct.id,
-                imageUrl: localProduct.image,
+                imageUrl: localProduct.image, // The data URI from localStorage
                 imageHint: 'custom product',
                 description: localProduct.name
               }
             });
           }
       });
-      setProducts(combinedProducts);
+      // By using a function with setProducts, we ensure we have the latest state.
+      setProducts(prevProducts => {
+          const productMap = new Map();
+          [...initialProducts, ...localProducts.map((localProduct: any) => ({
+                id: localProduct.id,
+                name: localProduct.name,
+                description: localProduct.description || '',
+                price: parseFloat(localProduct.price || 0),
+                category: localProduct.category || 'Uncategorized',
+                vendor: 'Current Vendor',
+                image: {
+                  id: localProduct.id,
+                  imageUrl: localProduct.image,
+                  imageHint: 'custom product',
+                  description: localProduct.name
+                }
+          }))].forEach(p => productMap.set(p.id, p));
+          return Array.from(productMap.values());
+      });
     } catch(e) {
       console.error("Could not parse products from local storage", e);
       setProducts(initialProducts);
