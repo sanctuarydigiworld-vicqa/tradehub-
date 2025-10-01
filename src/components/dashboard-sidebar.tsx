@@ -123,7 +123,7 @@ export function DashboardSidebar({ children }: { children: React.ReactNode }) {
             </DropdownMenu>
           </SidebarFooter>
         </Sidebar>
-        <main className="flex-1 bg-secondary/50 p-4 md:p-6 lg:p-8 ml-0 md:ml-[3rem] group-data-[state=expanded]:md:ml-[16rem] transition-[margin-left] duration-200 ease-linear">
+        <main className="flex-1 bg-secondary/50 p-4 pt-20 md:p-6 lg:p-8 ml-0 md:ml-[3rem] group-data-[state=expanded]:md:ml-[16rem] transition-[margin-left] duration-200 ease-linear">
           {children}
         </main>
       </div>
