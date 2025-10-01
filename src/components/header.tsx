@@ -55,6 +55,9 @@ export default function Header() {
               </div>
             </form>
           </div>
+          <Button asChild variant="outline">
+            <Link href="/register">Become a Vendor</Link>
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
