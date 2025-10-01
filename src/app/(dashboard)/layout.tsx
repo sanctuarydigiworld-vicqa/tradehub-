@@ -24,7 +24,7 @@ export default function DashboardRootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className={cn('font-body antialiased')}>
+      <body className={cn('font-body antialiased bg-muted/40')}>
         {children}
         <Toaster />
       </body>
