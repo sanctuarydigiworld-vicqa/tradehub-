@@ -19,7 +19,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   return (
     <Card className="flex flex-col h-full overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
       <CardHeader className="p-0">
-        <Link href="#">
+        <Link href={`/products/${product.id}`}>
           <div className="relative w-full aspect-[4/3] overflow-hidden">
             <Image
               src={product.image.imageUrl}
@@ -35,7 +35,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       <CardContent className="p-4 flex-grow">
         <Badge variant="secondary" className="mb-2">{product.category}</Badge>
         <CardTitle className="text-lg leading-snug">
-          <Link href="#" className="hover:text-primary transition-colors">
+          <Link href={`/products/${product.id}`} className="hover:text-primary transition-colors">
             {product.name}
           </Link>
         </CardTitle>
