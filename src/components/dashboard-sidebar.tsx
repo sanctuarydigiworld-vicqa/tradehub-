@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import Link from 'next/link';
@@ -67,7 +68,7 @@ export function DashboardSidebar({ children }: { children: React.ReactNode }) {
         <Sidebar>
           <SidebarHeader>
             <div className="flex items-center gap-2">
-              <SidebarTrigger>
+              <SidebarTrigger className="text-sidebar-foreground">
                 <PanelLeft />
               </SidebarTrigger>
               <h1 className="text-lg font-headline font-semibold">Dashboard</h1>
@@ -141,7 +142,7 @@ export function AdminDashboardSidebar({ children }: { children: React.ReactNode 
             <Sidebar>
             <SidebarHeader>
                 <div className="flex items-center gap-2">
-                  <SidebarTrigger>
+                  <SidebarTrigger className="text-sidebar-foreground">
                     <PanelLeft />
                   </SidebarTrigger>
                   <h1 className="text-lg font-headline font-semibold">Admin Panel</h1>
