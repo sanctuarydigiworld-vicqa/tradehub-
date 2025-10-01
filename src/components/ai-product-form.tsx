@@ -32,7 +32,7 @@ export function AiProductForm() {
 
   const handleFormAction = async (formData: FormData) => {
     setIsLoading(true);
-    setProductDescription(''); // Clear previous description
+    setProductDescription('');
     const result = await generateDescriptionAction(formData);
     setIsLoading(false);
 
