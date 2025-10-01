@@ -91,6 +91,8 @@ const AnimatedCart = () => (
 );
 
 export default function Home() {
+  const featuredProducts = products.slice(0, 6);
+
   return (
     <>
       <section className="relative bg-secondary/50 py-24 md:py-32 lg:py-40">
@@ -116,7 +118,7 @@ export default function Home() {
           </p>
           <div className="mt-10 flex items-center justify-center gap-4">
             <Button asChild size="lg">
-              <Link href="/">Start Shopping</Link>
+              <Link href="/products">Start Shopping</Link>
             </Button>
             <Button asChild size="lg" variant="outline">
               <Link href="/register">Start Selling</Link>
@@ -129,11 +131,19 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-3">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-6">
-              Featured Products
-            </h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-3xl lg:text-4xl font-bold">
+                Featured Products
+              </h2>
+              <Button asChild variant="outline">
+                <Link href="/products">
+                  View All
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Link>
+              </Button>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-              {products.map((product) => (
+              {featuredProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
