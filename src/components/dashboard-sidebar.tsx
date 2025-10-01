@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -62,81 +63,7 @@ export function DashboardSidebar({ children }: { children: React.ReactNode }) {
 
   return (
     <SidebarProvider>
-      <Sidebar>
-        <SidebarHeader>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="md:hidden" asChild>
-              <SidebarTrigger>
-                <PanelLeft />
-              </SidebarTrigger>
-            </Button>
-            <Package className="size-6 text-primary" />
-            <h1 className="text-lg font-headline font-semibold">VicqaTradeHub</h1>
-          </div>
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarMenu>
-            {navItems.map((item) => (
-              <SidebarMenuItem key={item.href}>
-                <Link href={item.href}>
-                  <SidebarMenuButton
-                    isActive={pathname === item.href}
-                    tooltip={item.label}
-                  >
-                    <item.icon />
-                    <span>{item.label}</span>
-                    {item.badge && <Badge className="ml-auto">{item.badge}</Badge>}
-                  </SidebarMenuButton>
-                </Link>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </SidebarContent>
-        <SidebarFooter>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="group/menu-button flex w-full items-center justify-start gap-2 overflow-hidden rounded-md p-2 text-left text-sm"
-              >
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src="https://picsum.photos/seed/avatar/100" />
-                  <AvatarFallback>V</AvatarFallback>
-                </Avatar>
-                <div className="truncate group-data-[collapsible=icon]:hidden">
-                  <p className="font-medium">Vendor Name</p>
-                  <p className="text-xs text-muted-foreground">
-                    vendor@example.com
-                  </p>
-                </div>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent side="right" align="start" className="w-56">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/dashboard/settings">Settings</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem>Support</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Logout</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </SidebarFooter>
-      </Sidebar>
-      <main className="flex-1 bg-secondary/50 p-4 md:p-6 lg:p-8 ml-0 md:ml-[3rem] group-data-[state=expanded]:md:ml-[16rem] transition-[margin-left] duration-200 ease-linear">
-        {children}
-      </main>
-    </SidebarProvider>
-  );
-}
-
-export function AdminDashboardSidebar({ children }: { children: React.ReactNode }) {
-    const navItems = adminNavItems;
-    const pathname = usePathname();
-  
-    return (
-      <SidebarProvider>
+      <div className="md:flex">
         <Sidebar>
           <SidebarHeader>
             <div className="flex items-center gap-2">
@@ -146,7 +73,7 @@ export function AdminDashboardSidebar({ children }: { children: React.ReactNode 
                 </SidebarTrigger>
               </Button>
               <Package className="size-6 text-primary" />
-              <h1 className="text-lg font-headline font-semibold">VicqaTradeHub<span className="text-xs text-muted-foreground ml-2">Admin</span></h1>
+              <h1 className="text-lg font-headline font-semibold">VicqaTradeHub</h1>
             </div>
           </SidebarHeader>
           <SidebarContent>
@@ -160,7 +87,7 @@ export function AdminDashboardSidebar({ children }: { children: React.ReactNode 
                     >
                       <item.icon />
                       <span>{item.label}</span>
-                      {item.badge && <Badge className={cn("ml-auto", pathname === item.href ? "bg-primary-foreground text-primary" : "bg-primary text-primary-foreground" )}>{item.badge}</Badge>}
+                      {item.badge && <Badge className="ml-auto">{item.badge}</Badge>}
                     </SidebarMenuButton>
                   </Link>
                 </SidebarMenuItem>
@@ -175,13 +102,13 @@ export function AdminDashboardSidebar({ children }: { children: React.ReactNode 
                   className="group/menu-button flex w-full items-center justify-start gap-2 overflow-hidden rounded-md p-2 text-left text-sm"
                 >
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src="https://picsum.photos/seed/admin-avatar/100" />
-                    <AvatarFallback>A</AvatarFallback>
+                    <AvatarImage src="https://picsum.photos/seed/avatar/100" />
+                    <AvatarFallback>V</AvatarFallback>
                   </Avatar>
                   <div className="truncate group-data-[collapsible=icon]:hidden">
-                    <p className="font-medium">Admin User</p>
+                    <p className="font-medium">Vendor Name</p>
                     <p className="text-xs text-muted-foreground">
-                      admin@VicqaTradeHub.com
+                      vendor@example.com
                     </p>
                   </div>
                 </Button>
@@ -189,15 +116,92 @@ export function AdminDashboardSidebar({ children }: { children: React.ReactNode 
               <DropdownMenuContent side="right" align="start" className="w-56">
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard/settings">Settings</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem>Support</DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem>Logout</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </SidebarFooter>
         </Sidebar>
-        <main className="flex-1 bg-secondary/50 p-4 md:p-6 lg:p-8 ml-0 md:ml-[3rem] group-data-[state=expanded]:md:ml-[16rem] transition-[margin-left] duration-200 ease-linear">
+        <main className="flex-1 bg-secondary/50 p-4 md:p-6 lg:p-8 pt-20 md:pt-8 ml-0 md:ml-[3rem] group-data-[state=expanded]:md:ml-[16rem] transition-[margin-left] duration-200 ease-linear">
           {children}
         </main>
+      </div>
+    </SidebarProvider>
+  );
+}
+
+export function AdminDashboardSidebar({ children }: { children: React.ReactNode }) {
+    const navItems = adminNavItems;
+    const pathname = usePathname();
+  
+    return (
+      <SidebarProvider>
+        <div className="md:flex">
+            <Sidebar>
+            <SidebarHeader>
+                <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" className="md:hidden" asChild>
+                    <SidebarTrigger>
+                    <PanelLeft />
+                    </SidebarTrigger>
+                </Button>
+                <Package className="size-6 text-primary" />
+                <h1 className="text-lg font-headline font-semibold">VicqaTradeHub<span className="text-xs text-muted-foreground ml-2">Admin</span></h1>
+                </div>
+            </SidebarHeader>
+            <SidebarContent>
+                <SidebarMenu>
+                {navItems.map((item) => (
+                    <SidebarMenuItem key={item.href}>
+                    <Link href={item.href}>
+                        <SidebarMenuButton
+                        isActive={pathname === item.href}
+                        tooltip={item.label}
+                        >
+                        <item.icon />
+                        <span>{item.label}</span>
+                        {item.badge && <Badge className={cn("ml-auto", pathname === item.href ? "bg-primary-foreground text-primary" : "bg-primary text-primary-foreground" )}>{item.badge}</Badge>}
+                        </SidebarMenuButton>
+                    </Link>
+                    </SidebarMenuItem>
+                ))}
+                </SidebarMenu>
+            </SidebarContent>
+            <SidebarFooter>
+                <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button
+                    variant="ghost"
+                    className="group/menu-button flex w-full items-center justify-start gap-2 overflow-hidden rounded-md p-2 text-left text-sm"
+                    >
+                    <Avatar className="h-8 w-8">
+                        <AvatarImage src="https://picsum.photos/seed/admin-avatar/100" />
+                        <AvatarFallback>A</AvatarFallback>
+                    </Avatar>
+                    <div className="truncate group-data-[collapsible=icon]:hidden">
+                        <p className="font-medium">Admin User</p>
+                        <p className="text-xs text-muted-foreground">
+                        admin@VicqaTradeHub.com
+                        </p>
+                    </div>
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent side="right" align="start" className="w-56">
+                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem>Logout</DropdownMenuItem>
+                </DropdownMenuContent>
+                </DropdownMenu>
+            </SidebarFooter>
+            </Sidebar>
+            <main className="flex-1 bg-secondary/50 p-4 md:p-6 lg:p-8 pt-20 md:pt-8 ml-0 md:ml-[3rem] group-data-[state=expanded]:md:ml-[16rem] transition-[margin-left] duration-200 ease-linear">
+            {children}
+            </main>
+        </div>
       </SidebarProvider>
     );
   }
-  
