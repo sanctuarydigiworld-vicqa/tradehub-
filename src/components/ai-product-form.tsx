@@ -123,7 +123,7 @@ export function AiProductForm() {
                     <CardDescription>
                         Your generated product description will appear here. You can edit it before saving.
                     </CardDescription>
-                </CardHeader>
+                </Header>
                 <CardContent>
                     <Textarea 
                         placeholder="Your AI-generated product description will appear here..."
