@@ -84,7 +84,7 @@ export default function ProductsPage() {
                       <DropdownMenuItem>Delete</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
-                </TableCell>
+                </TableCell>              
               </TableRow>
             ))}
           </TableBody>
