@@ -13,6 +13,83 @@ import {
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 
+const AnimatedCart = () => (
+  <div className="relative w-24 h-24 mb-4 text-primary">
+    <svg viewBox="0 0 100 100" className="absolute inset-0">
+      {/* Cart Body */}
+      <path
+        d="M20 80 L30 80 L35 40 L80 40 L75 60 L40 60 L35 80 Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <animateTransform
+          attributeName="transform"
+          type="translate"
+          from="-100 0"
+          to="0 0"
+          dur="1.5s"
+          begin="0s"
+          repeatCount="indefinite"
+          fill="freeze"
+        />
+      </path>
+      {/* Wheels */}
+      <circle cx="40" cy="85" r="4" fill="currentColor">
+        <animateTransform
+          attributeName="transform"
+          type="translate"
+          from="-100 0"
+          to="0 0"
+          dur="1.5s"
+          begin="0s"
+          repeatCount="indefinite"
+          fill="freeze"
+        />
+      </circle>
+      <circle cx="70" cy="85" r="4" fill="currentColor">
+        <animateTransform
+          attributeName="transform"
+          type="translate"
+          from="-100 0"
+          to="0 0"
+          dur="1.5s"
+          begin="0s"
+          repeatCount="indefinite"
+          fill="freeze"
+        />
+      </circle>
+      {/* Plus sign */}
+      <g stroke="currentColor" strokeWidth="4" strokeLinecap="round">
+        <line x1="60" y1="20" x2="80" y2="20">
+          <animate
+            attributeName="opacity"
+            from="0"
+            to="1"
+            dur="0.5s"
+            begin="1s"
+            repeatCount="indefinite"
+            fill="freeze"
+          />
+        </line>
+        <line x1="70" y1="10" x2="70" y2="30">
+          <animate
+            attributeName="opacity"
+            from="0"
+            to="1"
+            dur="0.5s"
+            begin="1s"
+            repeatCount="indefinite"
+            fill="freeze"
+          />
+        </line>
+      </g>
+    </svg>
+  </div>
+);
+
 export default function Home() {
   return (
     <>
@@ -28,7 +105,8 @@ export default function Home() {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
         </div>
-        <div className="container relative mx-auto text-center">
+        <div className="container relative mx-auto text-center flex flex-col items-center">
+          <AnimatedCart />
           <h1 className="text-4xl font-headline font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
             Discover & Sell Unique Goods
           </h1>
