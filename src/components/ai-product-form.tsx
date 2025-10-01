@@ -1,6 +1,6 @@
 'use client';
 
-import { useFormStatus } from 'react-dom';
+import { useRef, useState } from 'react';
 import { generateDescriptionAction } from '@/app/actions';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -9,60 +9,42 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Bot, Loader2, Sparkles } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { useEffect, useRef, useState, useActionState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
-const initialState = {
-  message: '',
-  description: '',
-};
-
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" disabled={pending}>
-      {pending ? (
-        <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Generating...
-        </>
-      ) : (
-        <>
-          <Sparkles className="mr-2 h-4 w-4" />
-          Generate with AI
-        </>
-      )}
-    </Button>
-  );
-}
-
 export function AiProductForm() {
-  const [state, formAction] = useActionState(generateDescriptionAction, initialState);
-  const [productDescription, setProductDescription] = useState('');
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
+  const [productDescription, setProductDescription] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
+  const handleFormAction = async (formData: FormData) => {
+    setIsLoading(true);
+    const result = await generateDescriptionAction({
+        message: '',
+        description: ''
+    }, formData);
+    setIsLoading(false);
 
-  useEffect(() => {
-    if(state.message && state.message !== 'Description generated successfully.') {
+    if (result.message && result.message !== 'Description generated successfully.') {
         toast({
             title: 'Error',
-            description: state.message,
+            description: result.message,
             variant: 'destructive'
-        })
+        });
     }
-    if (state.description) {
-      setProductDescription(state.description);
-      toast({
-        title: 'Success!',
-        description: "Your AI-powered description is ready.",
-      })
+
+    if (result.description) {
+        setProductDescription(result.description);
+        toast({
+            title: 'Success!',
+            description: "Your AI-powered description is ready.",
+        });
     }
-  }, [state, toast]);
+  }
 
   return (
     <div className="grid gap-8 lg:grid-cols-3">
-        <form action={formAction} ref={formRef} className="lg:col-span-2 grid gap-6">
+        <form action={handleFormAction} ref={formRef} className="lg:col-span-2 grid gap-6">
             <Card>
                 <CardHeader>
                 <CardTitle>Product Details</CardTitle>
@@ -73,7 +55,7 @@ export function AiProductForm() {
                 <CardContent className="grid gap-4">
                 <div className="grid gap-2">
                     <Label htmlFor="productName">Product Name</Label>
-                    <Input id="productName" name="productName" placeholder="e.g. Hand-carved Wooden Cross" />
+                    <Input id="productName" name="productName" placeholder="e.g. Hand-carved Wooden Cross" required />
                 </div>
                 <div className="grid gap-2">
                     <Label htmlFor="productFeatures">Key Features (comma-separated)</Label>
@@ -81,6 +63,7 @@ export function AiProductForm() {
                     id="productFeatures"
                     name="productFeatures"
                     placeholder="e.g. Made from olive wood, Hand-carved in Bethlehem, Smooth finish"
+                    required
                     />
                 </div>
                 </CardContent>
@@ -119,7 +102,19 @@ export function AiProductForm() {
                 </div>
                 </CardContent>
                 <CardFooter>
-                    <SubmitButton />
+                    <Button type="submit" disabled={isLoading}>
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="mr-2 h-4 w-4" />
+                          Generate with AI
+                        </>
+                      )}
+                    </Button>
                 </CardFooter>
             </Card>
         </form>
