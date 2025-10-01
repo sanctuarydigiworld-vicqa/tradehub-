@@ -22,7 +22,7 @@ export function AiProductForm() {
     const result = await generateDescriptionAction(formData);
     setIsLoading(false);
 
-    if (result.message && result.message !== 'Description generated successfully.') {
+    if (!result.success) {
         toast({
             title: 'Error',
             description: result.message,

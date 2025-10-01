@@ -27,6 +27,7 @@ export async function generateDescriptionAction(
 
   if (!validatedFields.success) {
     return {
+      success: false,
       message: 'Invalid form data.',
       description: '',
     };
@@ -44,12 +45,14 @@ export async function generateDescriptionAction(
     const result = await generateProductDescriptionFlow(input);
 
     return {
+      success: true,
       message: 'Description generated successfully.',
       description: result.productDescription,
     };
   } catch (error) {
     console.error(error);
     return {
+      success: false,
       message: 'Failed to generate description. Please try again.',
       description: '',
     };
