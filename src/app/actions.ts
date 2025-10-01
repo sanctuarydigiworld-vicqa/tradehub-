@@ -14,9 +14,15 @@ const formSchema = z.object({
   stylePreferences: z.string().optional(),
 });
 
+type GenerateDescriptionResult = {
+  success: boolean;
+  message: string;
+  description: string | null;
+};
+
 export async function generateDescriptionAction(
   formData: FormData
-) {
+): Promise<GenerateDescriptionResult> {
   const validatedFields = formSchema.safeParse({
     productName: formData.get('productName'),
     productFeatures: formData.get('productFeatures'),
@@ -29,7 +35,7 @@ export async function generateDescriptionAction(
     return {
       success: false,
       message: 'Invalid form data.',
-      description: '',
+      description: null,
     };
   }
 
@@ -51,10 +57,11 @@ export async function generateDescriptionAction(
     };
   } catch (error) {
     console.error(error);
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
     return {
       success: false,
-      message: 'Failed to generate description. Please try again.',
-      description: '',
+      message: `Failed to generate description: ${errorMessage}`,
+      description: null,
     };
   }
 }
