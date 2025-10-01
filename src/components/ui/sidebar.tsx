@@ -218,7 +218,7 @@ const Sidebar = React.forwardRef<
       <div
         ref={ref}
         className={cn(
-            "hidden md:flex flex-col h-full bg-sidebar text-sidebar-foreground border-r",
+            "hidden md:flex flex-col h-[calc(100svh-4rem)] mt-16 bg-sidebar text-sidebar-foreground border-r",
             "transition-all duration-200 ease-linear",
             state === 'expanded' ? 'w-[var(--sidebar-width)]' : 'w-[var(--sidebar-width-icon)]',
             className

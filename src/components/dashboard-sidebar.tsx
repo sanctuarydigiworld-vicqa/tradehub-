@@ -83,9 +83,9 @@ export function DashboardSidebar({ children }: { children: React.ReactNode }) {
                 <Header />
             </div>
             <MobileHeader />
-            <div className="flex-1 md:grid md:grid-cols-[auto_1fr] pt-20">
+            <div className="flex-1 md:grid md:grid-cols-[auto_1fr]">
                 <Sidebar>
-                <SidebarHeader className='hidden md:flex'>
+                <SidebarHeader>
                     <div className="flex items-center gap-2">
                     <SidebarTrigger className="text-sidebar-foreground">
                         <PanelLeft />
@@ -163,9 +163,9 @@ export function AdminDashboardSidebar({ children }: { children: React.ReactNode 
                 <Header />
             </div>
             <MobileHeader />
-            <div className="flex-1 md:grid md:grid-cols-[auto_1fr] pt-20">
+            <div className="flex-1 md:grid md:grid-cols-[auto_1fr]">
                 <Sidebar>
-                <SidebarHeader className="hidden md:flex">
+                <SidebarHeader>
                     <div className="flex items-center gap-2">
                     <SidebarTrigger className="text-sidebar-foreground">
                         <PanelLeft />
