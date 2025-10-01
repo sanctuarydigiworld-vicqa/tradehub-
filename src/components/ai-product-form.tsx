@@ -37,7 +37,7 @@ export function AiProductForm() {
             description: "Your AI-powered description is ready.",
         });
     }
-  }
+  };
 
   return (
     <div className="grid gap-8 lg:grid-cols-3">
