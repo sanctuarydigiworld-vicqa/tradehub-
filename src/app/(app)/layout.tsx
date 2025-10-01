@@ -1,22 +1,22 @@
 import type { Metadata } from 'next';
-import { Toaster } from '@/components/ui/toaster';
 import '../globals.css';
 import { cn } from '@/lib/utils';
-
+import Header from '@/components/header';
+import Footer from '@/components/footer';
 
 export const metadata: Metadata = {
-  title: 'TradeFlow Dashboard',
-  description: 'Manage your TradeFlow store.',
+  title: 'VicqaTradeHub',
+  description: 'A modern marketplace for vendors and buyers.',
 };
 
-export default function DashboardRootLayout({
+export default function AppRootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-       <head>
+      <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
@@ -24,9 +24,12 @@ export default function DashboardRootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className={cn('font-body antialiased bg-muted/40')}>
-        {children}
-        <Toaster />
+      <body className={cn('font-body antialiased')}>
+        <div className="relative flex min-h-screen flex-col">
+          <Header />
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </div>
       </body>
     </html>
   );
