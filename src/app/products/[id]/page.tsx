@@ -22,20 +22,59 @@ import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
+// SVG for WhatsApp icon as it's not in lucide-react
+const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+    </svg>
+  );
+
 export default function ProductPage({ params }: { params: { id: string } }) {
   const product = products.find((p) => p.id === params.id);
 
   if (!product) {
     notFound();
   }
+  
+  const productUrl = typeof window !== 'undefined' ? window.location.href : '';
+  const shareText = `Check out this product: ${product.name}`;
 
   const relatedProducts = products.filter(
     (p) => p.category === product.category && p.id !== product.id
   ).slice(0, 3);
+  
+  const getShareUrl = (platform: string) => {
+    switch (platform) {
+      case 'Twitter':
+        return `https://twitter.com/intent/tweet?url=${encodeURIComponent(productUrl)}&text=${encodeURIComponent(shareText)}`;
+      case 'Facebook':
+        return `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(productUrl)}`;
+      case 'WhatsApp':
+        return `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + ' ' + productUrl)}`;
+      case 'LinkedIn':
+        return `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(productUrl)}&title=${encodeURIComponent(product.name)}&summary=${encodeURIComponent(product.description)}`;
+      case 'Email':
+        return `mailto:?subject=${encodeURIComponent(shareText)}&body=${encodeURIComponent(`I thought you might like this product: ${productUrl}`)}`;
+      default:
+        return '#';
+    }
+  };
 
   const socialLinks = [
     { icon: Twitter, name: 'Twitter', color: 'hover:text-[#1DA1F2]' },
     { icon: Facebook, name: 'Facebook', color: 'hover:text-[#1877F2]' },
+    { icon: WhatsAppIcon, name: 'WhatsApp', color: 'hover:text-[#25D366]' },
     { icon: Instagram, name: 'Instagram', color: 'hover:text-[#E4405F]' },
     { icon: Linkedin, name: 'LinkedIn', color: 'hover:text-[#0A66C2]' },
     { icon: Mail, name: 'Email', color: 'hover:text-gray-500' },
@@ -79,7 +118,9 @@ export default function ProductPage({ params }: { params: { id: string } }) {
               {socialLinks.map((social) => (
                 <Link
                   key={social.name}
-                  href="#"
+                  href={getShareUrl(social.name)}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className={cn("text-muted-foreground transition-colors", social.color)}
                   aria-label={`Share on ${social.name}`}
                 >
