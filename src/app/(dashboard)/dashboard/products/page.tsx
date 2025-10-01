@@ -1,3 +1,5 @@
+'use client';
+
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -16,12 +18,48 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-import { products } from '@/lib/placeholder-data';
+import { products as initialProducts } from '@/lib/placeholder-data';
 import Image from 'next/image';
 import { MoreHorizontal } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useEffect, useState } from 'react';
+import type { Product } from '@/lib/types';
+
 
 export default function ProductsPage() {
+  const [products, setProducts] = useState<Product[]>(initialProducts);
+
+  useEffect(() => {
+    try {
+      const localProducts = JSON.parse(localStorage.getItem('products') || '[]');
+      // A simple way to merge and avoid duplicates. A real app would need a better strategy.
+      const combinedProducts = [...initialProducts];
+      localProducts.forEach((localProduct: any) => {
+          if(!combinedProducts.find(p => p.id === localProduct.id)) {
+            // Mapping local storage structure to Product type
+            combinedProducts.push({
+              id: localProduct.id,
+              name: localProduct.name,
+              description: localProduct.description || '',
+              price: localProduct.price || 0,
+              category: localProduct.category || 'Uncategorized',
+              vendor: 'Current Vendor',
+              image: {
+                id: localProduct.id,
+                imageUrl: localProduct.image,
+                imageHint: 'custom product',
+                description: localProduct.name
+              }
+            });
+          }
+      });
+      setProducts(combinedProducts);
+    } catch(e) {
+      console.error("Could not parse products from local storage", e);
+      setProducts(initialProducts);
+    }
+  }, []);
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">

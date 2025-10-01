@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Bot, Loader2, Sparkles } from 'lucide-react';
+import { Bot, Loader2, Sparkles, Upload } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -23,12 +23,15 @@ import {
   SelectValue,
 } from './ui/select';
 import { useToast } from '@/hooks/use-toast';
+import Image from 'next/image';
+import { cn } from '@/lib/utils';
 
 export function AiProductForm() {
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
   const [productDescription, setProductDescription] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const handleFormAction = async (formData: FormData) => {
     setIsLoading(true);
@@ -51,6 +54,71 @@ export function AiProductForm() {
     }
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handlePublish = () => {
+    if (!formRef.current) return;
+
+    const formData = new FormData(formRef.current);
+    const productName = formData.get('productName');
+
+    if (!productName) {
+      toast({
+        title: 'Missing Product Name',
+        description: 'Please enter a name for your product.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    if (!imagePreview) {
+      toast({
+        title: 'Missing Image',
+        description: 'Please upload an image for your product.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const productData = {
+      id: new Date().toISOString(),
+      name: productName,
+      features: formData.get('productFeatures'),
+      category: formData.get('productCategory'),
+      description: productDescription,
+      image: imagePreview,
+    };
+    
+    try {
+        const existingProducts = JSON.parse(localStorage.getItem('products') || '[]');
+        localStorage.setItem('products', JSON.stringify([...existingProducts, productData]));
+        toast({
+            title: 'Product Published!',
+            description: `${productName} has been saved.`,
+        });
+        // Optionally clear the form
+        formRef.current.reset();
+        setProductDescription('');
+        setImagePreview(null);
+    } catch (error) {
+        toast({
+            title: 'Error Saving Product',
+            description: 'There was an issue saving your product to local storage.',
+            variant: 'destructive',
+        });
+    }
+  };
+
+
   return (
     <div className="grid gap-8 lg:grid-cols-3">
       <form
@@ -62,11 +130,34 @@ export function AiProductForm() {
           <CardHeader>
             <CardTitle>Product Details</CardTitle>
             <CardDescription>
-              Enter your product details here. These will be used by the AI to
-              generate a description.
+              Enter your product details and upload an image.
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4">
+             <div className="grid gap-2">
+              <Label>Product Image</Label>
+              <div className={cn(
+                  "aspect-video w-full rounded-md flex items-center justify-center border-2 border-dashed border-muted-foreground/30 relative",
+                  {"items-start": !!imagePreview}
+              )}>
+                {imagePreview ? (
+                    <Image src={imagePreview} alt="Product preview" fill className="object-contain rounded-md" />
+                ) : (
+                    <div className="text-center text-muted-foreground">
+                        <Upload className="mx-auto h-8 w-8 mb-2" />
+                        <p className="text-sm">Drag & drop or click to upload</p>
+                    </div>
+                )}
+                <Input 
+                    id="productImage" 
+                    name="productImage" 
+                    type="file" 
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                />
+              </div>
+            </div>
             <div className="grid gap-2">
               <Label htmlFor="productName">Product Name</Label>
               <Input
@@ -169,7 +260,7 @@ export function AiProductForm() {
           </CardContent>
           <CardFooter className="flex justify-end gap-2">
             <Button variant="outline">Save as Draft</Button>
-            <Button>Publish Product</Button>
+            <Button onClick={handlePublish}>Publish Product</Button>
           </CardFooter>
         </Card>
       </div>
