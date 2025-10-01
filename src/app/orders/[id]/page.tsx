@@ -47,7 +47,7 @@ import {
               <div>
                 <h3 className="text-lg font-semibold">{order.product.name}</h3>
                 <p className="text-muted-foreground">{order.product.category}</p>
-                <p className="text-lg font-bold text-primary mt-1">${order.product.price.toFixed(2)}</p>
+                <p className="text-lg font-bold text-primary mt-1">GH₵{order.product.price.toFixed(2)}</p>
               </div>
             </div>
             

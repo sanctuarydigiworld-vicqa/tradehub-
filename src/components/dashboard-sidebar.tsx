@@ -71,7 +71,7 @@ export function DashboardSidebar({ children }: { children: React.ReactNode }) {
               </SidebarTrigger>
             </Button>
             <Package className="size-6 text-primary" />
-            <h1 className="text-lg font-headline font-semibold">TradeFlow</h1>
+            <h1 className="text-lg font-headline font-semibold">VicqaTradeHub</h1>
           </div>
         </SidebarHeader>
         <SidebarContent>
@@ -146,7 +146,7 @@ export function AdminDashboardSidebar({ children }: { children: React.ReactNode 
                 </SidebarTrigger>
               </Button>
               <Package className="size-6 text-primary" />
-              <h1 className="text-lg font-headline font-semibold">TradeFlow<span className="text-xs text-muted-foreground ml-2">Admin</span></h1>
+              <h1 className="text-lg font-headline font-semibold">VicqaTradeHub<span className="text-xs text-muted-foreground ml-2">Admin</span></h1>
             </div>
           </SidebarHeader>
           <SidebarContent>
@@ -181,7 +181,7 @@ export function AdminDashboardSidebar({ children }: { children: React.ReactNode 
                   <div className="truncate group-data-[collapsible=icon]:hidden">
                     <p className="font-medium">Admin User</p>
                     <p className="text-xs text-muted-foreground">
-                      admin@tradeflow.com
+                      admin@VicqaTradeHub.com
                     </p>
                   </div>
                 </Button>

@@ -42,7 +42,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       </CardContent>
       <CardFooter className="p-4 flex justify-between items-center">
         <p className="text-xl font-headline font-bold text-primary">
-          ${product.price.toFixed(2)}
+          GH₵{product.price.toFixed(2)}
         </p>
         <Button>Add to Cart</Button>
       </CardFooter>

@@ -62,7 +62,7 @@ export default function OrdersPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    ${order.product.price.toFixed(2)}
+                    GH₵{order.product.price.toFixed(2)}
                   </TableCell>
                   <TableCell className="text-right">
                     <Button asChild variant="ghost" size="icon">

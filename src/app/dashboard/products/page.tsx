@@ -66,7 +66,7 @@ export default function ProductsPage() {
                 <TableCell>
                   <Badge variant="outline">Active</Badge>
                 </TableCell>
-                <TableCell>${product.price.toFixed(2)}</TableCell>
+                <TableCell>GH₵{product.price.toFixed(2)}</TableCell>
                 <TableCell className="hidden md:table-cell">
                   2023-07-12 10:42 AM
                 </TableCell>

@@ -5,7 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 import Header from '@/components/header';
 
 export const metadata: Metadata = {
-  title: 'TradeFlow',
+  title: 'VicqaTradeHub',
   description: 'A modern marketplace for vendors and buyers.',
 };
 
