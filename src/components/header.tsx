@@ -27,11 +27,13 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 export default function Header() {
   const { user, loading } = { user: { email: 'vendor@example.com', displayName: 'Vendor Name' }, loading: false };
   const { toast } = useToast();
   const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleLogout = async () => {
     try {
@@ -48,6 +50,13 @@ export default function Header() {
         description: 'Failed to log out. Please try again.',
         variant: 'destructive',
       });
+    }
+  };
+
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
 
@@ -72,13 +81,15 @@ export default function Header() {
         </div>
         <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
           <div className="w-full flex-1 md:w-auto md:flex-none">
-            <form>
+            <form onSubmit={handleSearch}>
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="search"
                   placeholder="Search products..."
                   className="pl-8 sm:w-64 md:w-80"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
             </form>
