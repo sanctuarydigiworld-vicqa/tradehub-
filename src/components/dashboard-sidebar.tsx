@@ -67,13 +67,10 @@ export function DashboardSidebar({ children }: { children: React.ReactNode }) {
         <Sidebar>
           <SidebarHeader>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="md:hidden" asChild>
-                <SidebarTrigger>
-                  <PanelLeft />
-                </SidebarTrigger>
-              </Button>
-              <Package className="size-6 text-primary" />
-              <h1 className="text-lg font-headline font-semibold">VicqaTradeHub</h1>
+              <SidebarTrigger>
+                <PanelLeft />
+              </SidebarTrigger>
+              <h1 className="text-lg font-headline font-semibold">Dashboard</h1>
             </div>
           </SidebarHeader>
           <SidebarContent>
@@ -144,13 +141,10 @@ export function AdminDashboardSidebar({ children }: { children: React.ReactNode 
             <Sidebar>
             <SidebarHeader>
                 <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="md:hidden" asChild>
-                    <SidebarTrigger>
+                  <SidebarTrigger>
                     <PanelLeft />
-                    </SidebarTrigger>
-                </Button>
-                <Package className="size-6 text-primary" />
-                <h1 className="text-lg font-headline font-semibold">VicqaTradeHub<span className="text-xs text-muted-foreground ml-2">Admin</span></h1>
+                  </SidebarTrigger>
+                  <h1 className="text-lg font-headline font-semibold">Admin Panel</h1>
                 </div>
             </SidebarHeader>
             <SidebarContent>
