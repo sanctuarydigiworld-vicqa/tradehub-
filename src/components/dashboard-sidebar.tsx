@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -24,7 +25,6 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarFooter,
-  useSidebar,
 } from '@/components/ui/sidebar';
 import { Button } from './ui/button';
 import {
@@ -38,10 +38,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { cn } from '@/lib/utils';
 import { Separator } from './ui/separator';
-
-type DashboardSidebarProps = {
-  userType: 'vendor' | 'admin';
-};
 
 const vendorNavItems = [
   { href: '/', icon: Store, label: 'View Store' },
@@ -83,7 +79,7 @@ export function DashboardSidebar({ children }: { children: React.ReactNode }) {
                     <Package className="h-6 w-6 text-sidebar-primary" />
                     <span className="group-data-[collapsible=icon]:hidden">Dashboard</span>
                 </Link>
-                <SidebarTrigger className="ml-auto text-sidebar-foreground">
+                <SidebarTrigger className="ml-auto text-sidebar-foreground hidden md:flex">
                     <PanelLeft />
                 </SidebarTrigger>
                 </div>
@@ -141,7 +137,7 @@ export function DashboardSidebar({ children }: { children: React.ReactNode }) {
                 </DropdownMenu>
             </SidebarFooter>
             </Sidebar>
-            <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
+            <div className="flex flex-col sm:gap-4 sm:pl-14 sm:pt-4">
                 <MobileHeader />
                 <main className="flex-1 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
                     {children}
@@ -166,7 +162,7 @@ export function AdminDashboardSidebar({ children }: { children: React.ReactNode 
                     <Package className="h-6 w-6 text-sidebar-primary" />
                     <span className="group-data-[collapsible=icon]:hidden">Admin Panel</span>
                 </Link>
-                <SidebarTrigger className="ml-auto text-sidebar-foreground">
+                <SidebarTrigger className="ml-auto text-sidebar-foreground hidden md:flex">
                     <PanelLeft />
                 </SidebarTrigger>
                 </div>
@@ -219,7 +215,7 @@ export function AdminDashboardSidebar({ children }: { children: React.ReactNode 
                 </DropdownMenu>
             </SidebarFooter>
             </Sidebar>
-            <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
+            <div className="flex flex-col sm:gap-4 sm:pl-14 sm:pt-4">
                 <MobileHeader />
                 <main className="flex-1 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
                     {children}
