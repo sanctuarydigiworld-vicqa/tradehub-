@@ -69,7 +69,8 @@ export function AiProductForm() {
     if (!formRef.current) return;
 
     const formData = new FormData(formRef.current);
-    const productName = formData.get('productName');
+    const productName = formData.get('productName') as string;
+    const price = formData.get('price') as string;
 
     if (!productName) {
       toast({
@@ -88,10 +89,20 @@ export function AiProductForm() {
       });
       return;
     }
+    
+    if (!price || parseFloat(price) <= 0) {
+      toast({
+        title: 'Invalid Price',
+        description: 'Please enter a valid price for your product.',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     const productData = {
       id: new Date().toISOString(),
       name: productName,
+      price: parseFloat(price),
       features: formData.get('productFeatures'),
       category: formData.get('productCategory'),
       description: productDescription,
@@ -158,14 +169,27 @@ export function AiProductForm() {
                 />
               </div>
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="productName">Product Name</Label>
-              <Input
-                id="productName"
-                name="productName"
-                placeholder="e.g. Hand-carved Wooden Cross"
-                required
-              />
+            <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="productName">Product Name</Label>
+                  <Input
+                    id="productName"
+                    name="productName"
+                    placeholder="e.g. Hand-carved Wooden Cross"
+                    required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="price">Price (GH₵)</Label>
+                  <Input
+                    id="price"
+                    name="price"
+                    type="number"
+                    placeholder="e.g. 29.99"
+                    required
+                    step="0.01"
+                  />
+                </div>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="productFeatures">

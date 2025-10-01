@@ -31,47 +31,32 @@ export default function ProductsPage() {
 
   useEffect(() => {
     try {
-      const localProducts = JSON.parse(localStorage.getItem('products') || '[]');
-      const combinedProducts = [...initialProducts];
-      
-      localProducts.forEach((localProduct: any) => {
-          if(!combinedProducts.find(p => p.id === localProduct.id)) {
-            // Mapping local storage structure to Product type
-            combinedProducts.push({
+      const localProductsRaw = localStorage.getItem('products');
+      if (localProductsRaw) {
+        const localProducts = JSON.parse(localProductsRaw);
+        
+        const mappedLocalProducts = localProducts.map((localProduct: any) => ({
               id: localProduct.id,
               name: localProduct.name,
               description: localProduct.description || '',
-              price: localProduct.price || 0,
+              price: parseFloat(localProduct.price || 0),
               category: localProduct.category || 'Uncategorized',
               vendor: 'Current Vendor',
               image: {
                 id: localProduct.id,
-                imageUrl: localProduct.image, // The data URI from localStorage
+                imageUrl: localProduct.image,
                 imageHint: 'custom product',
                 description: localProduct.name
               }
-            });
-          }
-      });
-      // By using a function with setProducts, we ensure we have the latest state.
-      setProducts(prevProducts => {
-          const productMap = new Map();
-          [...initialProducts, ...localProducts.map((localProduct: any) => ({
-                id: localProduct.id,
-                name: localProduct.name,
-                description: localProduct.description || '',
-                price: parseFloat(localProduct.price || 0),
-                category: localProduct.category || 'Uncategorized',
-                vendor: 'Current Vendor',
-                image: {
-                  id: localProduct.id,
-                  imageUrl: localProduct.image,
-                  imageHint: 'custom product',
-                  description: localProduct.name
-                }
-          }))].forEach(p => productMap.set(p.id, p));
-          return Array.from(productMap.values());
-      });
+        }));
+
+        // Use a map to ensure no duplicate products by ID
+        const productMap = new Map();
+        initialProducts.forEach(p => productMap.set(p.id, p));
+        mappedLocalProducts.forEach((p: Product) => productMap.set(p.id, p));
+
+        setProducts(Array.from(productMap.values()));
+      }
     } catch(e) {
       console.error("Could not parse products from local storage", e);
       setProducts(initialProducts);
