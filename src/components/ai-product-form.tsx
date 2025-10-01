@@ -1,6 +1,6 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
+import { useFormStatus } from 'react-dom';
 import { generateDescriptionAction } from '@/app/actions';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Bot, Loader2, Sparkles } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useActionState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 const initialState = {
@@ -37,7 +37,7 @@ function SubmitButton() {
 }
 
 export function AiProductForm() {
-  const [state, formAction] = useFormState(generateDescriptionAction, initialState);
+  const [state, formAction] = useActionState(generateDescriptionAction, initialState);
   const [productDescription, setProductDescription] = useState('');
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
