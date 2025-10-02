@@ -38,6 +38,7 @@ export default function CartPage() {
   const shippingFee = 5.00;
   const cartTotal = cartSubtotal + shippingFee;
 
+  // Paystack config is now created inside the component
   const paystackConfig = {
     reference: (new Date()).getTime().toString(),
     email: "user@example.com", // Replace with user's email
@@ -76,6 +77,18 @@ export default function CartPage() {
             </Button>
         </div>
     )
+  }
+
+  const handleCheckout = () => {
+     const paystackConfig = {
+        reference: (new Date()).getTime().toString(),
+        email: "user@example.com", // Replace with user's email
+        amount: cartTotal * 100, // Amount in pesewas
+        publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
+        currency: 'GHS'
+    };
+    const initializePayment = usePaystackPayment(paystackConfig);
+    initializePayment({onSuccess: onPaymentSuccess, onClose: onPaymentClose});
   }
 
   return (
