@@ -1,3 +1,6 @@
+
+'use client';
+
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -10,12 +13,46 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { Product } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
 
 type ProductCardProps = {
   product: Product;
 };
 
 export default function ProductCard({ product }: ProductCardProps) {
+  const { toast } = useToast();
+
+  const handleAddToCart = () => {
+    try {
+      const cartRaw = localStorage.getItem('cart');
+      const cart = cartRaw ? JSON.parse(cartRaw) : [];
+      
+      const existingProductIndex = cart.findIndex((item: Product) => item.id === product.id);
+
+      if (existingProductIndex > -1) {
+        // For now, we just notify that it's already there. Later we can add quantity.
+        toast({
+          title: 'Already in cart',
+          description: `${product.name} is already in your cart.`,
+        });
+      } else {
+        cart.push({ ...product, quantity: 1 });
+        localStorage.setItem('cart', JSON.stringify(cart));
+        toast({
+          title: 'Added to cart',
+          description: `${product.name} has been added to your cart.`,
+        });
+      }
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      toast({
+        title: 'Error',
+        description: 'Could not add item to cart.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   return (
     <Card className="flex flex-col h-full overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
       <CardHeader className="p-0">
@@ -44,7 +81,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         <p className="text-xl font-headline font-bold text-primary">
           GH₵{product.price.toFixed(2)}
         </p>
-        <Button>Add to Cart</Button>
+        <Button onClick={handleAddToCart}>Add to Cart</Button>
       </CardFooter>
     </Card>
   );

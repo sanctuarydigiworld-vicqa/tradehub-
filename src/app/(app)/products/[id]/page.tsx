@@ -1,3 +1,6 @@
+
+'use client';
+
 import { products } from '@/lib/placeholder-data';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
@@ -21,6 +24,9 @@ import {
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
+import type { Product } from '@/lib/types';
+import { useEffect, useState } from 'react';
 
 // SVG for WhatsApp icon as it's not in lucide-react
 const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -41,16 +47,50 @@ const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
   );
 
 export default function ProductPage({ params }: { params: { id: string } }) {
-  const product = products.find((p) => p.id === params.id);
+  const { toast } = useToast();
+  const [allProducts, setAllProducts] = useState<Product[]>(products);
+
+  useEffect(() => {
+    try {
+      const localProductsRaw = localStorage.getItem('products');
+      if (localProductsRaw) {
+        const localProducts = JSON.parse(localProductsRaw);
+        const mappedLocalProducts: Product[] = localProducts.map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          description: p.description || '',
+          price: parseFloat(p.price || 0),
+          category: p.category || 'Uncategorized',
+          vendor: 'Current Vendor',
+          image: {
+            id: p.id,
+            imageUrl: p.image,
+            imageHint: 'custom product',
+            description: p.name
+          }
+        }));
+
+        const productMap = new Map();
+        products.forEach(p => productMap.set(p.id, p));
+        mappedLocalProducts.forEach(p => productMap.set(p.id, p));
+        setAllProducts(Array.from(productMap.values()));
+      }
+    } catch(e) {
+      console.error("Could not parse products from local storage", e);
+      setAllProducts(products);
+    }
+  }, []);
+
+  const product = allProducts.find((p) => p.id === params.id);
 
   if (!product) {
-    notFound();
+    return notFound();
   }
   
   const productUrl = typeof window !== 'undefined' ? window.location.href : '';
   const shareText = `Check out this product: ${product.name}`;
 
-  const relatedProducts = products.filter(
+  const relatedProducts = allProducts.filter(
     (p) => p.category === product.category && p.id !== product.id
   ).slice(0, 3);
   
@@ -79,6 +119,36 @@ export default function ProductPage({ params }: { params: { id: string } }) {
     { icon: Linkedin, name: 'LinkedIn', color: 'hover:text-[#0A66C2]' },
     { icon: Mail, name: 'Email', color: 'hover:text-gray-500' },
   ];
+  
+  const handleAddToCart = () => {
+    try {
+      const cartRaw = localStorage.getItem('cart');
+      const cart = cartRaw ? JSON.parse(cartRaw) : [];
+      
+      const existingProductIndex = cart.findIndex((item: Product) => item.id === product.id);
+
+      if (existingProductIndex > -1) {
+        toast({
+          title: 'Already in cart',
+          description: `${product.name} is already in your cart.`,
+        });
+      } else {
+        cart.push({ ...product, quantity: 1 });
+        localStorage.setItem('cart', JSON.stringify(cart));
+        toast({
+          title: 'Added to cart',
+          description: `${product.name} has been added to your cart.`,
+        });
+      }
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      toast({
+        title: 'Error',
+        description: 'Could not add item to cart.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -108,7 +178,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
           </div>
 
           <div className="flex items-center gap-4 mb-8">
-            <Button size="lg" className="flex-grow">Add to Cart</Button>
+            <Button size="lg" className="flex-grow" onClick={handleAddToCart}>Add to Cart</Button>
             <Button size="lg" variant="outline">Buy Now</Button>
           </div>
 
@@ -148,7 +218,12 @@ export default function ProductPage({ params }: { params: { id: string } }) {
 }
 
 export function generateStaticParams() {
-    return products.map((product) => ({
+    // We combine placeholder products with a generic approach for dynamic ones
+    const staticIds = products.map((product) => ({
         id: product.id,
     }));
+    
+    // This function runs at build time, so we can't access localStorage here.
+    // Next.js will fallback to on-demand rendering for any ID not in this list.
+    return staticIds;
 }
