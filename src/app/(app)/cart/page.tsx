@@ -23,9 +23,12 @@ import Image from 'next/image';
 import { Trash2, ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
 import { useCart } from '@/hooks/use-cart.tsx';
+import { usePaystackPayment } from 'react-paystack';
+import { useToast } from '@/hooks/use-toast';
 
 export default function CartPage() {
   const { cart, updateQuantity, removeFromCart, clearCart } = useCart();
+  const { toast } = useToast();
 
   const cartSubtotal = cart.reduce(
     (total, item) => total + item.price * item.quantity,
@@ -34,6 +37,33 @@ export default function CartPage() {
 
   const shippingFee = 5.00;
   const cartTotal = cartSubtotal + shippingFee;
+
+  const paystackConfig = {
+    reference: (new Date()).getTime().toString(),
+    email: "user@example.com", // Replace with user's email
+    amount: cartTotal * 100, // Amount in pesewas
+    publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
+    currency: 'GHS'
+  };
+
+  const initializePayment = usePaystackPayment(paystackConfig);
+
+  const onPaymentSuccess = (reference: any) => {
+    toast({
+      title: 'Payment Successful',
+      description: `Your payment was successful. Reference: ${reference.reference}`,
+    });
+    clearCart();
+    // Here you would typically save the order to your database
+  };
+
+  const onPaymentClose = () => {
+    toast({
+      title: 'Payment Canceled',
+      description: 'You closed the payment popup.',
+      variant: 'destructive',
+    });
+  };
 
   if (cart.length === 0) {
     return (
@@ -134,7 +164,9 @@ export default function CartPage() {
               </div>
             </CardContent>
             <CardFooter className="flex flex-col gap-2">
-                <Button className="w-full" size="lg">Proceed to Checkout</Button>
+                <Button className="w-full" size="lg" onClick={() => initializePayment({onSuccess: onPaymentSuccess, onClose: onPaymentClose})}>
+                  Proceed to Checkout
+                </Button>
                 <Button asChild variant="outline" className="w-full">
                     <Link href="/products">Continue Shopping</Link>
                 </Button>
