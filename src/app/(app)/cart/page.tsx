@@ -38,16 +38,16 @@ export default function CartPage() {
   const shippingFee = 5.00;
   const cartTotal = cartSubtotal + shippingFee;
 
-  // Paystack config is now created inside the component
-  const paystackConfig = {
+  // This is a placeholder config. The actual config will be created inside handleCheckout.
+  const config = {
     reference: (new Date()).getTime().toString(),
-    email: "user@example.com", // Replace with user's email
-    amount: cartTotal * 100, // Amount in pesewas
+    email: "user@example.com",
+    amount: cartTotal * 100,
     publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
     currency: 'GHS'
   };
-
-  const initializePayment = usePaystackPayment(paystackConfig);
+  
+  const initializePayment = usePaystackPayment(config);
 
   const onPaymentSuccess = (reference: any) => {
     toast({
@@ -80,15 +80,12 @@ export default function CartPage() {
   }
 
   const handleCheckout = () => {
-     const paystackConfig = {
-        reference: (new Date()).getTime().toString(),
-        email: "user@example.com", // Replace with user's email
-        amount: cartTotal * 100, // Amount in pesewas
-        publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
-        currency: 'GHS'
+    const freshConfig = {
+      ...config,
+      reference: (new Date()).getTime().toString(),
     };
-    const initializePayment = usePaystackPayment(paystackConfig);
-    initializePayment({onSuccess: onPaymentSuccess, onClose: onPaymentClose});
+    // usePaystackPayment must be called as a hook, so we call initializePayment that was returned by it.
+    initializePayment({onSuccess: onPaymentSuccess, onClose: onPaymentClose, config: freshConfig});
   }
 
   return (
@@ -177,7 +174,7 @@ export default function CartPage() {
               </div>
             </CardContent>
             <CardFooter className="flex flex-col gap-2">
-                <Button className="w-full" size="lg" onClick={() => initializePayment({onSuccess: onPaymentSuccess, onClose: onPaymentClose})}>
+                <Button className="w-full" size="lg" onClick={handleCheckout}>
                   Proceed to Checkout
                 </Button>
                 <Button asChild variant="outline" className="w-full">
