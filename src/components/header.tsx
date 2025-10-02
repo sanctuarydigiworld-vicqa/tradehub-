@@ -9,6 +9,7 @@ import {
   ListOrdered,
   LogOut,
   ShieldCheck,
+  ShoppingCart,
 } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -94,6 +95,13 @@ export default function Header() {
               </div>
             </form>
           </div>
+          
+          <Button asChild variant="ghost" size="icon">
+              <Link href="/cart">
+                <ShoppingCart className="h-5 w-5" />
+                <span className="sr-only">Shopping Cart</span>
+              </Link>
+          </Button>
 
           {!user && !loading && (
              <Button asChild variant="outline">

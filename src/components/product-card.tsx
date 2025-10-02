@@ -19,30 +19,33 @@ type ProductCardProps = {
   product: Product;
 };
 
+type CartItem = Product & { quantity: number };
+
+
 export default function ProductCard({ product }: ProductCardProps) {
   const { toast } = useToast();
 
   const handleAddToCart = () => {
     try {
       const cartRaw = localStorage.getItem('cart');
-      const cart = cartRaw ? JSON.parse(cartRaw) : [];
+      const cart: CartItem[] = cartRaw ? JSON.parse(cartRaw) : [];
       
-      const existingProductIndex = cart.findIndex((item: Product) => item.id === product.id);
+      const existingProductIndex = cart.findIndex((item) => item.id === product.id);
 
       if (existingProductIndex > -1) {
-        // For now, we just notify that it's already there. Later we can add quantity.
+        cart[existingProductIndex].quantity += 1;
         toast({
-          title: 'Already in cart',
-          description: `${product.name} is already in your cart.`,
+          title: 'Added to cart',
+          description: `Another ${product.name} has been added to your cart.`,
         });
       } else {
         cart.push({ ...product, quantity: 1 });
-        localStorage.setItem('cart', JSON.stringify(cart));
         toast({
           title: 'Added to cart',
           description: `${product.name} has been added to your cart.`,
         });
       }
+      localStorage.setItem('cart', JSON.stringify(cart));
     } catch (error) {
       console.error('Error adding to cart:', error);
       toast({
@@ -54,7 +57,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <Card className="flex flex-col h-full overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+    <Card className="flex flex-col h-full overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group">
       <CardHeader className="p-0">
         <Link href={`/products/${product.id}`}>
           <div className="relative w-full aspect-[4/3] overflow-hidden">
