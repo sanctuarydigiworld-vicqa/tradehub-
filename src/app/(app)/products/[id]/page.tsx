@@ -20,13 +20,14 @@ import {
   Linkedin,
   Mail,
   Share2,
+  Check,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
 import type { Product } from '@/lib/types';
 import { useEffect, useState } from 'react';
+import { useCart } from '@/hooks/use-cart.tsx';
 
 // SVG for WhatsApp icon as it's not in lucide-react
 const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -46,11 +47,9 @@ const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
     </svg>
   );
 
-type CartItem = Product & { quantity: number };
-
 export default function ProductPage({ params }: { params: { id: string } }) {
-  const { toast } = useToast();
   const [allProducts, setAllProducts] = useState<Product[]>(products);
+  const { addToCart, isInCart } = useCart();
 
   useEffect(() => {
     try {
@@ -84,6 +83,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
   }, []);
 
   const product = allProducts.find((p) => p.id === params.id);
+  const isProductInCart = product ? isInCart(product.id) : false;
 
   if (!product) {
     return notFound();
@@ -121,38 +121,6 @@ export default function ProductPage({ params }: { params: { id: string } }) {
     { icon: Linkedin, name: 'LinkedIn', color: 'hover:text-[#0A66C2]' },
     { icon: Mail, name: 'Email', color: 'hover:text-gray-500' },
   ];
-  
-  const handleAddToCart = () => {
-    if (!product) return;
-    try {
-      const cartRaw = localStorage.getItem('cart');
-      const cart: CartItem[] = cartRaw ? JSON.parse(cartRaw) : [];
-      
-      const existingProductIndex = cart.findIndex((item) => item.id === product.id);
-
-      if (existingProductIndex > -1) {
-        cart[existingProductIndex].quantity += 1;
-        toast({
-          title: 'Added to cart',
-          description: `Another ${product.name} has been added to your cart.`,
-        });
-      } else {
-        cart.push({ ...product, quantity: 1 });
-        toast({
-          title: 'Added to cart',
-          description: `${product.name} has been added to your cart.`,
-        });
-      }
-      localStorage.setItem('cart', JSON.stringify(cart));
-    } catch (error) {
-      console.error('Error adding to cart:', error);
-      toast({
-        title: 'Error',
-        description: 'Could not add item to cart.',
-        variant: 'destructive',
-      });
-    }
-  };
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -182,7 +150,14 @@ export default function ProductPage({ params }: { params: { id: string } }) {
           </div>
 
           <div className="flex items-center gap-4 mb-8">
-            <Button size="lg" className="flex-grow" onClick={handleAddToCart}>Add to Cart</Button>
+            <Button size="lg" className="flex-grow" onClick={() => addToCart(product)} disabled={isProductInCart}>
+                {isProductInCart ? (
+                    <>
+                        <Check className="mr-2 h-4 w-4" /> Added to Cart
+                    </>
+                ) : 'Add to Cart'
+                }
+            </Button>
             <Button size="lg" variant="outline">Buy Now</Button>
           </div>
 

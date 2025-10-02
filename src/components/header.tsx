@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -29,12 +30,15 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useCart } from '@/hooks/use-cart.tsx';
 
 export default function Header() {
   const { user, loading } = { user: { email: 'vendor@example.com', displayName: 'Vendor Name' }, loading: false };
   const { toast } = useToast();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
+  const { cart } = useCart();
+  const cartItemCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   const handleLogout = async () => {
     try {
@@ -73,10 +77,10 @@ export default function Header() {
           </Link>
           <nav className="flex items-center space-x-6 text-sm font-medium">
             <Link
-              href="/"
+              href="/products"
               className="transition-colors hover:text-foreground/80 text-foreground"
             >
-              Home
+              Products
             </Link>
           </nav>
         </div>
@@ -96,9 +100,14 @@ export default function Header() {
             </form>
           </div>
           
-          <Button asChild variant="ghost" size="icon">
+          <Button asChild variant="ghost" size="icon" className="relative">
               <Link href="/cart">
                 <ShoppingCart className="h-5 w-5" />
+                {cartItemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                    {cartItemCount}
+                  </span>
+                )}
                 <span className="sr-only">Shopping Cart</span>
               </Link>
           </Button>
@@ -114,7 +123,7 @@ export default function Header() {
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                 {user ? (
                    <Avatar className="h-8 w-8">
-                     <AvatarImage src={user.photoURL || `https://avatar.vercel.sh/${user.email}.png`} alt={user.displayName || user.email || ''} />
+                     <AvatarImage src={(user as any).photoURL || `https://avatar.vercel.sh/${user.email}.png`} alt={user.displayName || user.email || ''} />
                      <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
                    </Avatar>
                 ) : (

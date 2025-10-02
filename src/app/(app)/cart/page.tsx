@@ -1,9 +1,6 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
-import type { Product } from '@/lib/types';
-import { useToast } from '@/hooks/use-toast';
 import {
   Card,
   CardContent,
@@ -25,60 +22,12 @@ import { Input } from '@/components/ui/input';
 import Image from 'next/image';
 import { Trash2, ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
-
-type CartItem = Product & { quantity: number };
+import { useCart } from '@/hooks/use-cart.tsx';
 
 export default function CartPage() {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const { toast } = useToast();
+  const { cart, updateQuantity, removeFromCart, clearCart } = useCart();
 
-  useEffect(() => {
-    try {
-      const cartRaw = localStorage.getItem('cart');
-      const loadedCart = cartRaw ? JSON.parse(cartRaw) : [];
-      setCartItems(loadedCart);
-    } catch (error) {
-      console.error('Error loading cart:', error);
-      toast({
-        title: 'Error',
-        description: 'Could not load your cart.',
-        variant: 'destructive',
-      });
-    }
-  }, [toast]);
-
-  const updateCart = (newCart: CartItem[]) => {
-    setCartItems(newCart);
-    try {
-      localStorage.setItem('cart', JSON.stringify(newCart));
-    } catch (error) {
-        console.error('Error saving cart:', error);
-        toast({
-          title: 'Error',
-          description: 'Could not update your cart.',
-          variant: 'destructive',
-        });
-    }
-  };
-
-  const handleQuantityChange = (productId: string, quantity: number) => {
-    if (quantity < 1) return;
-    const newCart = cartItems.map((item) =>
-      item.id === productId ? { ...item, quantity } : item
-    );
-    updateCart(newCart);
-  };
-
-  const handleRemoveItem = (productId: string) => {
-    const newCart = cartItems.filter((item) => item.id !== productId);
-    updateCart(newCart);
-    toast({
-      title: 'Item removed',
-      description: 'The item has been removed from your cart.',
-    });
-  };
-
-  const cartSubtotal = cartItems.reduce(
+  const cartSubtotal = cart.reduce(
     (total, item) => total + item.price * item.quantity,
     0
   );
@@ -86,7 +35,7 @@ export default function CartPage() {
   const shippingFee = 5.00;
   const cartTotal = cartSubtotal + shippingFee;
 
-  if (cartItems.length === 0) {
+  if (cart.length === 0) {
     return (
         <div className="container mx-auto p-4 sm:p-6 lg:p-8 text-center">
             <ShoppingCart className="mx-auto h-16 w-16 text-muted-foreground" />
@@ -118,7 +67,7 @@ export default function CartPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {cartItems.map((item) => (
+                  {cart.map((item) => (
                     <TableRow key={item.id}>
                       <TableCell className="hidden sm:table-cell">
                         <Image
@@ -139,7 +88,7 @@ export default function CartPage() {
                           type="number"
                           min="1"
                           value={item.quantity}
-                          onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value, 10))}
+                          onChange={(e) => updateQuantity(item.id, parseInt(e.target.value, 10))}
                           className="w-20 mx-auto text-center"
                         />
                       </TableCell>
@@ -150,7 +99,7 @@ export default function CartPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleRemoveItem(item.id)}
+                          onClick={() => removeFromCart(item.id)}
                           aria-label="Remove item"
                         >
                           <Trash2 className="h-4 w-4 text-muted-foreground" />
