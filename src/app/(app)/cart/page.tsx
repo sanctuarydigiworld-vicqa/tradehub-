@@ -82,6 +82,7 @@ export default function CartPage() {
   const handleCheckout = () => {
     const freshConfig = {
       ...config,
+      amount: cartTotal * 100, // Recalculate amount just in case
       reference: (new Date()).getTime().toString(),
     };
     // usePaystackPayment must be called as a hook, so we call initializePayment that was returned by it.
