@@ -37,8 +37,8 @@ export default function Header() {
   const { toast } = useToast();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
-  const { cart } = useCart();
-  const cartItemCount = cart.reduce((acc, item) => acc + item.quantity, 0);
+  const { rawCart } = useCart();
+  const cartItemCount = rawCart.reduce((acc, item) => acc + item.quantity, 0);
 
   const handleLogout = async () => {
     try {
