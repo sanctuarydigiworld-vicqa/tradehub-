@@ -42,11 +42,31 @@ const COUPONS = [
 ];
 
 const SHIPPING_ZONES = [
-  { name: 'Winneba', fee: 0 },
-  { name: 'Accra', fee: 25 },
-  { name: 'Eastern Region', fee: 30 },
-  { name: 'Kumasi/Ashanti Region', fee: 35 },
-  { name: 'Northern Region', fee: 60 },
+    { 
+        name: 'Greater Accra', 
+        fee: 25, 
+        towns: ['Accra', 'Tema', 'Adenta', 'Madina'] 
+    },
+    { 
+        name: 'Ashanti', 
+        fee: 35, 
+        towns: ['Kumasi', 'Obuasi', 'Mampong'] 
+    },
+    { 
+        name: 'Eastern', 
+        fee: 30, 
+        towns: ['Koforidua', 'Nkawkaw', 'Suhum'] 
+    },
+    { 
+        name: 'Central', 
+        fee: 0, 
+        towns: ['Winneba', 'Cape Coast', 'Kasoa'] 
+    },
+    { 
+        name: 'Northern', 
+        fee: 60, 
+        towns: ['Tamale', 'Yendi', 'Damongo'] 
+    },
 ];
 
 
@@ -62,23 +82,37 @@ export default function CartPage() {
     name: '',
     email: '',
     phone: '',
-    address: '',
   });
+
+  const [location, setLocation] = useState({
+      region: '',
+      town: ''
+  });
+  const [availableTowns, setAvailableTowns] = useState<string[]>([]);
 
   const handleCustomerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setCustomer(prev => ({ ...prev, [name]: value }));
   };
   
-  const handleShippingZoneChange = (zoneName: string) => {
-    const zone = SHIPPING_ZONES.find(z => z.name === zoneName);
+  const handleRegionChange = (regionName: string) => {
+    const zone = SHIPPING_ZONES.find(z => z.name === regionName);
     if (zone) {
       setShippingFee(zone.fee);
-      setCustomer(prev => ({ ...prev, address: zoneName }));
+      setLocation({ region: regionName, town: ''});
+      setAvailableTowns(zone.towns);
+    } else {
+        setShippingFee(0);
+        setLocation({ region: '', town: '' });
+        setAvailableTowns([]);
     }
   }
 
-  const isFormValid = customer.name && customer.email && customer.phone && customer.address;
+  const handleTownChange = (townName: string) => {
+      setLocation(prev => ({ ...prev, town: townName }));
+  }
+
+  const isFormValid = customer.name && customer.email && customer.phone && location.region && location.town;
 
   const cartSubtotal = cart.reduce(
     (total, item) => total + item.price * item.quantity,
@@ -86,6 +120,7 @@ export default function CartPage() {
   );
 
   const cartTotal = cartSubtotal + shippingFee - discount;
+  const fullAddress = `${location.town}, ${location.region}`;
 
   const config = {
     reference: (new Date()).getTime().toString(),
@@ -96,7 +131,7 @@ export default function CartPage() {
      metadata: {
       name: customer.name,
       phone: customer.phone,
-      address: customer.address,
+      address: fullAddress,
       cart: JSON.stringify(cart.map(item => ({ id: item.id, name: item.name, quantity: item.quantity }))),
     },
   };
@@ -166,7 +201,7 @@ export default function CartPage() {
     if (!isFormValid) {
         toast({
             title: 'Missing Information',
-            description: 'Please fill out all customer details before checking out.',
+            description: 'Please fill out all customer and delivery details before checking out.',
             variant: 'destructive'
         });
         return;
@@ -179,7 +214,7 @@ export default function CartPage() {
         metadata: {
             name: customer.name,
             phone: customer.phone,
-            address: customer.address,
+            address: fullAddress,
             cart: JSON.stringify(cart.map(item => ({ id: item.id, name: item.name, quantity: item.quantity }))),
         },
     };
@@ -271,15 +306,30 @@ export default function CartPage() {
                     <Input id="phone" name="phone" type="tel" placeholder="+233 12 345 6789" value={customer.phone} onChange={handleCustomerChange} required />
                 </div>
                  <div className="grid gap-2">
-                    <Label htmlFor="address">Delivery Zone</Label>
-                    <Select onValueChange={handleShippingZoneChange} required>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select your location" />
+                    <Label htmlFor="region">Region</Label>
+                    <Select onValueChange={handleRegionChange} required>
+                        <SelectTrigger id="region">
+                            <SelectValue placeholder="Select your region" />
                         </SelectTrigger>
                         <SelectContent>
                             {SHIPPING_ZONES.map(zone => (
                                 <SelectItem key={zone.name} value={zone.name}>
                                     {zone.name} - GH₵{zone.fee.toFixed(2)}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div className="grid gap-2">
+                    <Label htmlFor="town">Town / City</Label>
+                    <Select onValueChange={handleTownChange} value={location.town} required disabled={!location.region}>
+                        <SelectTrigger id="town">
+                            <SelectValue placeholder="Select your town/city" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {availableTowns.map(town => (
+                                <SelectItem key={town} value={town}>
+                                    {town}
                                 </SelectItem>
                             ))}
                         </SelectContent>
