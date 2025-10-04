@@ -50,16 +50,13 @@ export default function CartPage() {
   const shippingFee = 5.00;
   const cartTotal = cartSubtotal + shippingFee - discount;
 
-  // This is a placeholder config. The actual config will be created inside handleCheckout.
-  const config = {
+  const initializePayment = usePaystackPayment({
     reference: (new Date()).getTime().toString(),
     email: "user@example.com",
-    amount: cartTotal * 100,
+    amount: 0, // Initial amount, will be updated
     publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || 'pk_live_fbad5dcf56a1f9c927b19b1fb64fff73a688b8a3',
     currency: 'GHS'
-  };
-  
-  const initializePayment = usePaystackPayment(config);
+  });
 
   const onPaymentSuccess = (reference: any) => {
     toast({
@@ -121,11 +118,12 @@ export default function CartPage() {
 
   const handleCheckout = () => {
     const freshConfig = {
-      ...config,
-      amount: Math.round(cartTotal * 100), // Recalculate and ensure amount is an integer
       reference: (new Date()).getTime().toString(),
+      email: "user@example.com",
+      amount: Math.round(cartTotal * 100),
+      publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || 'pk_live_fbad5dcf56a1f9c927b19b1fb64fff73a688b8a3',
+      currency: 'GHS'
     };
-    // usePaystackPayment must be called as a hook, so we call initializePayment that was returned by it.
     initializePayment({onSuccess: onPaymentSuccess, onClose: onPaymentClose, config: freshConfig});
   }
 
