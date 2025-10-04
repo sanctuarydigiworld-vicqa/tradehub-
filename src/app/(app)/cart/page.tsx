@@ -18,6 +18,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Image from 'next/image';
@@ -34,6 +41,14 @@ const COUPONS = [
   { code: 'VICQA20', type: 'fixed', value: 20 },
 ];
 
+const SHIPPING_ZONES = [
+  { name: 'Winneba', fee: 0 },
+  { name: 'Accra', fee: 25 },
+  { name: 'Eastern Region', fee: 30 },
+  { name: 'Kumasi/Ashanti Region', fee: 35 },
+  { name: 'Northern Region', fee: 60 },
+];
+
 
 export default function CartPage() {
   const { cart, updateQuantity, removeFromCart, clearCart } = useCart();
@@ -41,6 +56,7 @@ export default function CartPage() {
   const [couponCode, setCouponCode] = useState('');
   const [discount, setDiscount] = useState(0);
   const [appliedCoupon, setAppliedCoupon] = useState('');
+  const [shippingFee, setShippingFee] = useState(0);
 
   const [customer, setCustomer] = useState({
     name: '',
@@ -53,6 +69,14 @@ export default function CartPage() {
     const { name, value } = e.target;
     setCustomer(prev => ({ ...prev, [name]: value }));
   };
+  
+  const handleShippingZoneChange = (zoneName: string) => {
+    const zone = SHIPPING_ZONES.find(z => z.name === zoneName);
+    if (zone) {
+      setShippingFee(zone.fee);
+      setCustomer(prev => ({ ...prev, address: zoneName }));
+    }
+  }
 
   const isFormValid = customer.name && customer.email && customer.phone && customer.address;
 
@@ -61,7 +85,6 @@ export default function CartPage() {
     0
   );
 
-  const shippingFee = 5.00;
   const cartTotal = cartSubtotal + shippingFee - discount;
 
   const config = {
@@ -248,8 +271,19 @@ export default function CartPage() {
                     <Input id="phone" name="phone" type="tel" placeholder="+233 12 345 6789" value={customer.phone} onChange={handleCustomerChange} required />
                 </div>
                  <div className="grid gap-2">
-                    <Label htmlFor="address">Delivery Address</Label>
-                    <Input id="address" name="address" placeholder="123 Market St, Accra" value={customer.address} onChange={handleCustomerChange} required />
+                    <Label htmlFor="address">Delivery Zone</Label>
+                    <Select onValueChange={handleShippingZoneChange} required>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select your location" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {SHIPPING_ZONES.map(zone => (
+                                <SelectItem key={zone.name} value={zone.name}>
+                                    {zone.name} - GH₵{zone.fee.toFixed(2)}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </div>
             </CardContent>
           </Card>
