@@ -122,21 +122,13 @@ export default function CartPage() {
   const cartTotal = cartSubtotal + shippingFee - discount;
   const fullAddress = `${location.town}, ${location.region}`;
 
-  const config = {
-    reference: (new Date()).getTime().toString(),
-    email: customer.email,
-    amount: Math.round(cartTotal * 100),
-    publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || 'pk_live_fbad5dcf56a1f9c927b19b1fb64fff73a688b8a3',
-    currency: 'GHS',
-     metadata: {
-      name: customer.name,
-      phone: customer.phone,
-      address: fullAddress,
-      cart: JSON.stringify(cart.map(item => ({ id: item.id, name: item.name, quantity: item.quantity }))),
-    },
-  };
-
-  const initializePayment = usePaystackPayment(config);
+  const initializePayment = usePaystackPayment({
+      reference: new Date().getTime().toString(),
+      email: customer.email,
+      amount: 0, // Will be set on checkout
+      publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || 'pk_live_fbad5dcf56a1f9c927b19b1fb64fff73a688b8a3',
+      currency: 'GHS',
+  });
 
 
   const onPaymentSuccess = (reference: any) => {
@@ -207,10 +199,11 @@ export default function CartPage() {
         return;
     }
     const freshConfig = {
-        ...config,
         reference: (new Date()).getTime().toString(),
         email: customer.email,
         amount: Math.round(cartTotal * 100),
+        publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || 'pk_live_fbad5dcf56a1f9c927b19b1fb64fff73a688b8a3',
+        currency: 'GHS',
         metadata: {
             name: customer.name,
             phone: customer.phone,
