@@ -1,6 +1,7 @@
 
 'use client';
 
+import { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -20,15 +21,26 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Image from 'next/image';
-import { Trash2, ShoppingCart } from 'lucide-react';
+import { Trash2, ShoppingCart, Tag } from 'lucide-react';
 import Link from 'next/link';
 import { useCart } from '@/hooks/use-cart.tsx';
 import { usePaystackPayment } from 'react-paystack';
 import { useToast } from '@/hooks/use-toast';
+import { Separator } from '@/components/ui/separator';
+
+const COUPONS = [
+  { code: 'SAVE10', type: 'percentage', value: 10 },
+  { code: 'VICQA20', type: 'fixed', value: 20 },
+];
+
 
 export default function CartPage() {
   const { cart, updateQuantity, removeFromCart, clearCart } = useCart();
   const { toast } = useToast();
+  const [couponCode, setCouponCode] = useState('');
+  const [discount, setDiscount] = useState(0);
+  const [appliedCoupon, setAppliedCoupon] = useState('');
+
 
   const cartSubtotal = cart.reduce(
     (total, item) => total + item.price * item.quantity,
@@ -36,14 +48,14 @@ export default function CartPage() {
   );
 
   const shippingFee = 5.00;
-  const cartTotal = cartSubtotal + shippingFee;
+  const cartTotal = cartSubtotal + shippingFee - discount;
 
   // This is a placeholder config. The actual config will be created inside handleCheckout.
   const config = {
     reference: (new Date()).getTime().toString(),
     email: "user@example.com",
     amount: cartTotal * 100,
-    publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
+    publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || 'pk_live_fbad5dcf56a1f9c927b19b1fb64fff73a688b8a3',
     currency: 'GHS'
   };
   
@@ -65,6 +77,34 @@ export default function CartPage() {
       variant: 'destructive',
     });
   };
+
+  const handleApplyCoupon = () => {
+    const coupon = COUPONS.find(c => c.code.toUpperCase() === couponCode.toUpperCase());
+
+    if (coupon) {
+      let discountValue = 0;
+      if (coupon.type === 'percentage') {
+        discountValue = (cartSubtotal * coupon.value) / 100;
+      } else {
+        discountValue = coupon.value;
+      }
+      setDiscount(discountValue);
+      setAppliedCoupon(coupon.code);
+      toast({
+        title: 'Coupon Applied!',
+        description: `You've received a discount of GH₵${discountValue.toFixed(2)}.`,
+      });
+    } else {
+      setDiscount(0);
+      setAppliedCoupon('');
+      toast({
+        title: 'Invalid Coupon',
+        description: 'The coupon code you entered is not valid.',
+        variant: 'destructive',
+      });
+    }
+  };
+
 
   if (cart.length === 0) {
     return (
@@ -161,6 +201,20 @@ export default function CartPage() {
               <CardDescription>Review your order before checkout.</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4">
+               <div className="flex items-center gap-2">
+                <Input 
+                  placeholder="Coupon Code" 
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value)}
+                  disabled={!!appliedCoupon}
+                />
+                <Button onClick={handleApplyCoupon} disabled={!couponCode || !!appliedCoupon}>
+                  Apply
+                </Button>
+              </div>
+
+              <Separator />
+
               <div className="flex justify-between">
                 <span>Subtotal</span>
                 <span>GH₵{cartSubtotal.toFixed(2)}</span>
@@ -169,6 +223,13 @@ export default function CartPage() {
                 <span>Shipping</span>
                 <span>GH₵{shippingFee.toFixed(2)}</span>
               </div>
+                {discount > 0 && (
+                <div className="flex justify-between text-green-600">
+                  <span>Discount ({appliedCoupon})</span>
+                  <span>-GH₵{discount.toFixed(2)}</span>
+                </div>
+              )}
+              <Separator />
               <div className="flex justify-between font-bold text-lg">
                 <span>Total</span>
                 <span>GH₵{cartTotal.toFixed(2)}</span>
