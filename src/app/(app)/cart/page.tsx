@@ -125,11 +125,13 @@ export default function CartPage() {
 
   const onPaymentSuccess = (reference: any) => {
     toast({
-      title: 'Payment Successful',
-      description: `Your payment was successful. Reference: ${reference.reference}`,
+      title: 'Order Placed!',
+      description: `Your order was successful. Reference: ${reference.reference}`,
     });
     clearCart();
-    // Here you would typically save the order to your database
+    setDiscount(0);
+    setAppliedCoupon('');
+    setCouponCode('');
   };
 
   const onPaymentClose = () => {
@@ -181,7 +183,7 @@ export default function CartPage() {
     )
   }
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (!isFormValid) {
         toast({
             title: 'Missing Information',
@@ -190,23 +192,62 @@ export default function CartPage() {
         });
         return;
     }
-    const freshConfig = {
-        reference: `vicqa_${new Date().getTime().toString()}`,
+
+    const reference = `vicqa_${new Date().getTime().toString()}`;
+    const metadata = {
+        name: customer.name,
+        phone: customer.phone,
+        address: fullAddress,
+        cart: JSON.stringify(cart.map(item => ({ id: item.id, name: item.name, quantity: item.quantity, price: item.price }))),
+        subtotal: cartSubtotal,
+        shipping: shippingFee,
+        discount: discount,
+    };
+    
+    // If cart total is zero (e.g. 100% coupon), process directly
+    if (cartTotal <= 0) {
+        console.log("Zero amount order, processing directly.");
+        try {
+            // Simulate webhook call for admin notification
+            await fetch('/api/paystack/webhook', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // This is a simulated secret header to bypass actual signature verification for this special case
+                    'x-studio-simulated-webhook': 'true', 
+                },
+                body: JSON.stringify({
+                    event: 'charge.success',
+                    data: {
+                        reference: reference,
+                        amount: 0,
+                        currency: 'GHS',
+                        status: 'success',
+                        customer: {
+                            email: customer.email,
+                            name: customer.name,
+                        },
+                        metadata: metadata
+                    }
+                })
+            });
+        } catch(e) {
+            console.error("Failed to simulate webhook for zero-amount order", e);
+        }
+
+        onPaymentSuccess({ reference });
+        return;
+    }
+
+    const paystackConfig = {
+        reference: reference,
         email: customer.email,
         amount: Math.round(cartTotal * 100),
         publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY!,
         currency: 'GHS',
-        metadata: {
-            name: customer.name,
-            phone: customer.phone,
-            address: fullAddress,
-            cart: JSON.stringify(cart.map(item => ({ id: item.id, name: item.name, quantity: item.quantity, price: item.price }))),
-            subtotal: cartSubtotal,
-            shipping: shippingFee,
-            discount: discount,
-        },
+        metadata: metadata,
     };
-    initializePayment({onSuccess: onPaymentSuccess, onClose: onPaymentClose, config: freshConfig});
+    initializePayment({onSuccess: onPaymentSuccess, onClose: onPaymentClose, config: paystackConfig});
   }
 
   return (

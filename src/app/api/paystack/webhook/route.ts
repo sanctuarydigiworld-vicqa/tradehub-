@@ -79,6 +79,15 @@ Total Paid: ${currency} ${totalAmount}
 
 export async function POST(req: NextRequest) {
     try {
+        // Handle simulated webhook for zero-amount orders
+        const isSimulated = req.headers.get('x-studio-simulated-webhook') === 'true';
+        if (isSimulated) {
+            console.log("Processing simulated webhook for zero-amount order.");
+            const payload = await req.json();
+            await sendAdminNotification(payload);
+            return new NextResponse('Simulated webhook processed successfully', { status: 200 });
+        }
+        
         const secret = process.env.PAYSTACK_SECRET_KEY;
         if (!secret) {
             throw new Error('Paystack secret key is not set in environment variables.');
