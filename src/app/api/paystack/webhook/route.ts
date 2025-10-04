@@ -1,20 +1,27 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import * as crypto from 'crypto';
+import nodemailer from 'nodemailer';
 
-// This is a simplified email sending function. 
-// In a real app, you'd use a robust library like nodemailer
 async function sendAdminNotification(payload: any) {
     const { event, data } = payload;
     
     // Ensure it's a successful charge event
     if (event !== 'charge.success') {
+        console.log(`Webhook received non-charge event: ${event}. Ignoring.`);
         return;
     }
 
     const adminContact = process.env.ADMIN_EMAIL_OR_SMS_GATEWAY;
     if (!adminContact) {
-        console.error("Admin contact address is not set. Please set ADMIN_EMAIL_OR_SMS_GATEWAY in your .env file.");
+        console.error("CRITICAL: Admin contact address is not set. Please set ADMIN_EMAIL_OR_SMS_GATEWAY in your .env file.");
+        return;
+    }
+
+    const emailUser = process.env.EMAIL_USER;
+    const emailPass = process.env.EMAIL_PASSWORD;
+    if(!emailUser || !emailPass) {
+        console.error("CRITICAL: Email credentials are not set. Please set EMAIL_USER and EMAIL_PASSWORD in your .env file.");
         return;
     }
 
@@ -27,59 +34,45 @@ async function sendAdminNotification(payload: any) {
     
     const itemList = items.map((item: any) => `- ${item.quantity}x ${item.name} @ ${currency} ${(item.price).toFixed(2)}`).join('\n');
     
+    // For SMS gateways, the "body" of the email is the text message content.
+    // Keep it concise.
     const body = `
-A new order has been placed on VicqaTradeHub.
-
-Order Details:
-----------------
-Reference: ${data.reference}
+New Order (#${data.reference})
 Customer: ${customerName}
-Email: ${data.customer.email}
-Phone: ${data.metadata?.phone || 'Not provided'}
-Address: ${data.metadata?.address || 'Not provided'}
+Phone: ${data.metadata?.phone || 'N/A'}
+Address: ${data.metadata?.address || 'N/A'}
 
 Items:
 ${itemList}
 
-----------------
 Subtotal: ${currency} ${(data.metadata?.subtotal || 0).toFixed(2)}
 Shipping: ${currency} ${(data.metadata?.shipping || 0).toFixed(2)}
 Discount: ${currency} ${(data.metadata?.discount || 0).toFixed(2)}
-----------------
 Total Paid: ${currency} ${totalAmount}
-----------------
     `;
 
-    console.log("----- NEW ORDER NOTIFICATION -----");
-    console.log(`To: ${adminContact}`);
-    console.log(`Subject: ${subject}`);
-    console.log(`Body: \n${body}`);
-    console.log("---------------------------------");
-    
-    // In a real implementation, you would replace the console logs
-    // with your actual email sending logic (e.g., using Nodemailer, SendGrid, etc.)
-    // For SMS, the "To" address would be the adminContact variable.
-    
-    // Example with nodemailer (you'd need to install it: npm install nodemailer)
-    /*
-    const nodemailer = require('nodemailer');
+    // Use nodemailer to send the actual email
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD, // Use an app-specific password for Gmail
+        user: emailUser,
+        pass: emailPass, // Use an app-specific password for Gmail
       },
     });
 
-    await transporter.sendMail({
-      from: `"VicqaTradeHub" <${process.env.EMAIL_USER}>`,
-      to: adminContact,
-      subject: subject,
-      text: body,
-    });
-    */
-
-   console.log("Simulating sending notification to admin.");
+    try {
+        await transporter.sendMail({
+          from: `"VicqaTradeHub" <${emailUser}>`,
+          to: adminContact, // This sends to your email-to-sms gateway
+          subject: subject,
+          text: body,
+        });
+        console.log(`Successfully sent order notification to ${adminContact}`);
+    } catch (error) {
+        console.error(`Failed to send email notification to ${adminContact}:`, error);
+        // We don't throw here because we don't want Paystack to retry.
+        // In a production app, you might want to log this to a monitoring service.
+    }
 }
 
 
@@ -96,7 +89,9 @@ export async function POST(req: NextRequest) {
         
         const secret = process.env.PAYSTACK_SECRET_KEY;
         if (!secret) {
-            throw new Error('Paystack secret key is not set in environment variables.');
+            console.error('CRITICAL: Paystack secret key is not set in environment variables.');
+            // Don't return the error message to the client
+            return new NextResponse('Webhook configuration error', { status: 500 });
         }
 
         const body = await req.text();
@@ -113,7 +108,7 @@ export async function POST(req: NextRequest) {
 
         const payload = JSON.parse(body);
 
-        // Process the webhook payload
+        // Process the webhook payload (this now sends the email/SMS)
         await sendAdminNotification(payload);
 
         return new NextResponse('Webhook processed successfully', { status: 200 });
