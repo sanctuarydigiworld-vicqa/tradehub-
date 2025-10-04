@@ -42,22 +42,22 @@ const COUPONS = [
 ];
 
 const SHIPPING_ZONES = [
-    { name: 'Ahafo', fee: 21.26, towns: ['Acherensua', 'Bechem', 'Duayaw Nkwanta', 'Goaso', 'Hwidiem', 'Kenyasi', 'Mim', 'Sankore'].sort() },
-    { name: 'Ashanti', fee: 18.59, towns: ['Agogo', 'Asokore', 'Bekwai', 'Ejisu', 'Fomena', 'Konongo', 'Kumasi', 'Mampong', 'Manso Nkwanta', 'New Edubiase', 'Obuasi', 'Offinso', 'Tafo', 'Tepa'].sort() },
-    { name: 'Bono', fee: 21.26, towns: ['Banda (Banda Ahenkro)', 'Berekum', 'Dormaa Ahenkro', 'Jaman South (Drobo)', 'Sene West (Kwame Danso)', 'Sunyani', 'Takyiman', 'Wenchi'].sort() },
-    { name: 'Bono East', fee: 23.92, towns: ['Amantin', 'Atebubu', 'Kintampo', 'Nkoranza', 'Pru East (Yeji)', 'Sene East (Kajaji)', 'Techiman', 'Yeji'].sort() },
+    { name: 'Ahafo', fee: 19.13, towns: ['Acherensua', 'Bechem', 'Duayaw Nkwanta', 'Goaso', 'Hwidiem', 'Kenyasi', 'Mim', 'Sankore'].sort() },
+    { name: 'Ashanti', fee: 16.73, towns: ['Agogo', 'Asokore', 'Bekwai', 'Ejisu', 'Fomena', 'Konongo', 'Kumasi', 'Mampong', 'Manso Nkwanta', 'New Edubiase', 'Obuasi', 'Offinso', 'Tafo', 'Tepa'].sort() },
+    { name: 'Bono', fee: 19.13, towns: ['Banda Ahenkro', 'Berekum', 'Dormaa Ahenkro', 'Drobo', 'Kwame Danso', 'Sunyani', 'Takyiman', 'Wenchi'].sort() },
+    { name: 'Bono East', fee: 21.53, towns: ['Amantin', 'Atebubu', 'Kintampo', 'Nkoranza', 'Pru East (Yeji)', 'Sene East (Kajaji)', 'Techiman', 'Yeji'].sort() },
     { name: 'Central', fee: 0, towns: ['Agona Swedru', 'Assin Fosu', 'Cape Coast', 'Dunkwa-on-Offin', 'Elmina', 'Kasoa', 'Mankessim', 'Twifo Praso', 'Winneba'].sort() },
-    { name: 'Eastern', fee: 15.94, towns: ['Aburi', 'Akim Oda', 'Akyem Swedru', 'Akyem Takyiman', 'Akropong', 'Akwatia', 'Asamankese', 'Asuom', 'Begoro', 'Donkorkrom', 'Kade', 'Koforidua', 'Nkawkaw', 'Somanya', 'Suhum'].sort() },
-    { name: 'Greater Accra', fee: 13.29, towns: ['Accra', 'Ada Foah', 'Adenta', 'Ashaiman', 'Dome', 'Ga West (Amasaman)', 'Legon', 'Madina', 'Nungua', 'Tema', 'Teshie'].sort() },
-    { name: 'North East', fee: 34.55, towns: ['Bunkpurugu', 'Chereponi', 'East Mamprusi', 'Gambaga', 'Nalerigu', 'Walewale', 'Yagaba'].sort() },
-    { name: 'Northern', fee: 31.89, towns: ['Bimbilla', 'Damongo', 'Gushegu', 'Karaga', 'Kpandai', 'Salaga', 'Savelugu', 'Tamale', 'Tolon', 'Yendi'].sort() },
-    { name: 'Oti', fee: 29.22, towns: ['Dambai', 'Jasikan', 'Kadjebi', 'Kete Krachi', 'Kpassa', 'Nkwanta', 'Worawora'].sort() },
-    { name: 'Savannah', fee: 34.55, towns: ['Bole', 'Buipe', 'Central Gonja (Buipe)', 'Daboya', 'Damongo', 'Salaga', 'Sawla'].sort() },
-    { name: 'Upper East', fee: 37.21, towns: ['Bawku', 'Binduri', 'Bolgatanga', 'Garu', 'Navrongo', 'Paga', 'Sandema', 'Zebilla'].sort() },
-    { name: 'Upper West', fee: 37.21, towns: ['Funsi', 'Jirapa', 'Lawra', 'Nandom', 'Tumu', 'Wa', 'Wechiau'].sort() },
-    { name: 'Volta', fee: 26.58, towns: ['Adidome', 'Aflao', 'Akatsi', 'Anloga', 'Ho', 'Hohoe', 'Keta', 'Kpandu', 'Sogakope'].sort() },
-    { name: 'Western', fee: 23.92, towns: ['Axim', 'Elubo', 'Mpohor', 'Prestea', 'Sekondi', 'Shama', 'Takoradi', 'Tarkwa'].sort() },
-    { name: 'Western North', fee: 26.58, towns: ['Aowin (Enchi)', 'Asankragua', 'Bia West (Essam)', 'Bibiani', 'Enchi', 'Juaboso', 'Sefwi Wiawso'].sort() }
+    { name: 'Eastern', fee: 14.35, towns: ['Aburi', 'Akim Oda', 'Akyem Swedru', 'Akyem Takyiman', 'Akropong', 'Akwatia', 'Asamankese', 'Asuom', 'Begoro', 'Donkorkrom', 'Kade', 'Koforidua', 'Nkawkaw', 'Somanya', 'Suhum'].sort() },
+    { name: 'Greater Accra', fee: 11.96, towns: ['Accra', 'Ada Foah', 'Adenta', 'Amasaman', 'Ashaiman', 'Dome', 'Legon', 'Madina', 'Nungua', 'Tema', 'Teshie'].sort() },
+    { name: 'North East', fee: 31.10, towns: ['Bunkpurugu', 'Chereponi', 'East Mamprusi', 'Gambaga', 'Nalerigu', 'Walewale', 'Yagaba'].sort() },
+    { name: 'Northern', fee: 28.70, towns: ['Bimbilla', 'Damongo', 'Gushegu', 'Karaga', 'Kpandai', 'Salaga', 'Savelugu', 'Tamale', 'Tolon', 'Yendi'].sort() },
+    { name: 'Oti', fee: 26.30, towns: ['Dambai', 'Jasikan', 'Kadjebi', 'Kete Krachi', 'Kpassa', 'Nkwanta', 'Worawora'].sort() },
+    { name: 'Savannah', fee: 31.10, towns: ['Bole', 'Buipe', 'Daboya', 'Damongo', 'Salaga', 'Sawla'].sort() },
+    { name: 'Upper East', fee: 33.49, towns: ['Bawku', 'Binduri', 'Bolgatanga', 'Garu', 'Navrongo', 'Paga', 'Sandema', 'Zebilla'].sort() },
+    { name: 'Upper West', fee: 33.49, towns: ['Funsi', 'Jirapa', 'Lawra', 'Nandom', 'Tumu', 'Wa', 'Wechiau'].sort() },
+    { name: 'Volta', fee: 23.92, towns: ['Adidome', 'Aflao', 'Akatsi', 'Anloga', 'Ho', 'Hohoe', 'Keta', 'Kpandu', 'Sogakope'].sort() },
+    { name: 'Western', fee: 21.53, towns: ['Axim', 'Elubo', 'Mpohor', 'Prestea', 'Sekondi', 'Shama', 'Takoradi', 'Tarkwa'].sort() },
+    { name: 'Western North', fee: 23.92, towns: ['Aowin (Enchi)', 'Asankragua', 'Bia West (Essam)', 'Bibiani', 'Enchi', 'Juaboso', 'Sefwi Wiawso'].sort() }
 ];
 
 
