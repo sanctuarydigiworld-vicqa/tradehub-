@@ -42,31 +42,22 @@ const COUPONS = [
 ];
 
 const SHIPPING_ZONES = [
-    { 
-        name: 'Greater Accra', 
-        fee: 25, 
-        towns: ['Accra', 'Tema', 'Adenta', 'Madina'] 
-    },
-    { 
-        name: 'Ashanti', 
-        fee: 35, 
-        towns: ['Kumasi', 'Obuasi', 'Mampong'] 
-    },
-    { 
-        name: 'Eastern', 
-        fee: 30, 
-        towns: ['Koforidua', 'Nkawkaw', 'Suhum'] 
-    },
-    { 
-        name: 'Central', 
-        fee: 0, 
-        towns: ['Winneba', 'Cape Coast', 'Kasoa'] 
-    },
-    { 
-        name: 'Northern', 
-        fee: 60, 
-        towns: ['Tamale', 'Yendi', 'Damongo'] 
-    },
+    { name: 'Ahafo', fee: 40, towns: ['Goaso', 'Mim', 'Hwidiem', 'Kenyasi', 'Bechem'] },
+    { name: 'Ashanti', fee: 35, towns: ['Kumasi', 'Obuasi', 'Mampong', 'Ejisu', 'Bekwai'] },
+    { name: 'Bono', fee: 40, towns: ['Sunyani', 'Berekum', 'Dormaa Ahenkro', 'Wenchi', 'Jaman'] },
+    { name: 'Bono East', fee: 45, towns: ['Techiman', 'Kintampo', 'Nkoranza', 'Atebubu', 'Amantin'] },
+    { name: 'Central', fee: 0, towns: ['Cape Coast', 'Kasoa', 'Winneba', 'Elmina', 'Mankessim'] },
+    { name: 'Eastern', fee: 30, towns: ['Koforidua', 'Nkawkaw', 'Suhum', 'Akim Oda', 'Aburi'] },
+    { name: 'Greater Accra', fee: 25, towns: ['Accra', 'Tema', 'Adenta', 'Madina', 'Legon'] },
+    { name: 'North East', fee: 65, towns: ['Nalerigu', 'Walewale', 'Gambaga', 'Bunkpurugu', 'Yagaba'] },
+    { name: 'Northern', fee: 60, towns: ['Tamale', 'Yendi', 'Damongo', 'Savelugu', 'Salaga'] },
+    { name: 'Oti', fee: 55, towns: ['Dambai', 'Kete Krachi', 'Jasikan', 'Kadjebi', 'Nkwanta'] },
+    { name: 'Savannah', fee: 65, towns: ['Damongo', 'Bole', 'Salaga', 'Sawla', 'Daboya'] },
+    { name: 'Upper East', fee: 70, towns: ['Bolgatanga', 'Bawku', 'Navrongo', 'Zebilla', 'Paga'] },
+    { name: 'Upper West', fee: 70, towns: ['Wa', 'Tumu', 'Lawra', 'Nandom', 'Jirapa'] },
+    { name: 'Volta', fee: 50, towns: ['Ho', 'Hohoe', 'Keta', 'Aflao', 'Anloga'] },
+    { name: 'Western', fee: 45, towns: ['Takoradi', 'Sekondi', 'Tarkwa', 'Axim', 'Elubo'] },
+    { name: 'Western North', fee: 50, towns: ['Sefwi Wiawso', 'Bibiani', 'Asankragua', 'Enchi', 'Juaboso'] }
 ];
 
 
