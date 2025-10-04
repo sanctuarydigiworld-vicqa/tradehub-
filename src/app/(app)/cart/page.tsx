@@ -39,6 +39,7 @@ import { Label } from '@/components/ui/label';
 const COUPONS = [
   { code: 'SAVE10', type: 'percentage', value: 10 },
   { code: 'VICQA20', type: 'fixed', value: 20 },
+  { code: 'WELCOME100', type: 'percentage', value: 100 },
 ];
 
 const SHIPPING_ZONES = [
@@ -47,7 +48,7 @@ const SHIPPING_ZONES = [
     { name: 'Bono', fee: 19.13, towns: ['Banda Ahenkro', 'Berekum', 'Dormaa Ahenkro', 'Drobo', 'Kwame Danso', 'Sunyani', 'Takyiman', 'Wenchi'].sort() },
     { name: 'Bono East', fee: 21.53, towns: ['Amantin', 'Atebubu', 'Kintampo', 'Nkoranza', 'Pru East (Yeji)', 'Sene East (Kajaji)', 'Techiman', 'Yeji'].sort() },
     { name: 'Central', fee: 0, towns: ['Agona Swedru', 'Assin Fosu', 'Cape Coast', 'Dunkwa-on-Offin', 'Elmina', 'Kasoa', 'Mankessim', 'Twifo Praso', 'Winneba'].sort() },
-    { name: 'Eastern', fee: 14.35, towns: ['Aburi', 'Akim Oda', 'Akyem Swedru', 'Akyem Takyiman', 'Akropong', 'Akwatia', 'Asamankese', 'Asuom', 'Begoro', 'Donkorkrom', 'Kade', 'Koforidua', 'Nkawkaw', 'Somanya', 'Suhum'].sort() },
+    { name: 'Eastern', fee: 14.35, towns: ['Aburi', 'Akim Oda', 'Akropong', 'Akwatia', 'Akyem Swedru', 'Akyem Takyiman', 'Asamankese', 'Asuom', 'Begoro', 'Donkorkrom', 'Kade', 'Koforidua', 'Nkawkaw', 'Somanya', 'Suhum'].sort() },
     { name: 'Greater Accra', fee: 11.96, towns: ['Accra', 'Ada Foah', 'Adenta', 'Amasaman', 'Ashaiman', 'Dome', 'Legon', 'Madina', 'Nungua', 'Tema', 'Teshie'].sort() },
     { name: 'North East', fee: 31.10, towns: ['Bunkpurugu', 'Chereponi', 'East Mamprusi', 'Gambaga', 'Nalerigu', 'Walewale', 'Yagaba'].sort() },
     { name: 'Northern', fee: 28.70, towns: ['Bimbilla', 'Damongo', 'Gushegu', 'Karaga', 'Kpandai', 'Salaga', 'Savelugu', 'Tamale', 'Tolon', 'Yendi'].sort() },
@@ -379,5 +380,3 @@ export default function CartPage() {
     </div>
   );
 }
-
-    
