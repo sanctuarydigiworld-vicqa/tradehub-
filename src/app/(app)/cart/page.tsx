@@ -27,6 +27,7 @@ import { useCart } from '@/hooks/use-cart.tsx';
 import { usePaystackPayment } from 'react-paystack';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
+import { Label } from '@/components/ui/label';
 
 const COUPONS = [
   { code: 'SAVE10', type: 'percentage', value: 10 },
@@ -41,6 +42,19 @@ export default function CartPage() {
   const [discount, setDiscount] = useState(0);
   const [appliedCoupon, setAppliedCoupon] = useState('');
 
+  const [customer, setCustomer] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+  });
+
+  const handleCustomerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setCustomer(prev => ({ ...prev, [name]: value }));
+  };
+
+  const isFormValid = customer.name && customer.email && customer.phone && customer.address;
 
   const cartSubtotal = cart.reduce(
     (total, item) => total + item.price * item.quantity,
@@ -50,13 +64,22 @@ export default function CartPage() {
   const shippingFee = 5.00;
   const cartTotal = cartSubtotal + shippingFee - discount;
 
-  const initializePayment = usePaystackPayment({
+  const config = {
     reference: (new Date()).getTime().toString(),
-    email: "user@example.com",
-    amount: 0, // Initial amount, will be updated
+    email: customer.email,
+    amount: Math.round(cartTotal * 100),
     publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || 'pk_live_fbad5dcf56a1f9c927b19b1fb64fff73a688b8a3',
-    currency: 'GHS'
-  });
+    currency: 'GHS',
+     metadata: {
+      name: customer.name,
+      phone: customer.phone,
+      address: customer.address,
+      cart: JSON.stringify(cart.map(item => ({ id: item.id, name: item.name, quantity: item.quantity }))),
+    },
+  };
+
+  const initializePayment = usePaystackPayment(config);
+
 
   const onPaymentSuccess = (reference: any) => {
     toast({
@@ -117,12 +140,25 @@ export default function CartPage() {
   }
 
   const handleCheckout = () => {
+    if (!isFormValid) {
+        toast({
+            title: 'Missing Information',
+            description: 'Please fill out all customer details before checking out.',
+            variant: 'destructive'
+        });
+        return;
+    }
     const freshConfig = {
-      reference: (new Date()).getTime().toString(),
-      email: "user@example.com",
-      amount: Math.round(cartTotal * 100),
-      publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || 'pk_live_fbad5dcf56a1f9c927b19b1fb64fff73a688b8a3',
-      currency: 'GHS'
+        ...config,
+        reference: (new Date()).getTime().toString(),
+        email: customer.email,
+        amount: Math.round(cartTotal * 100),
+        metadata: {
+            name: customer.name,
+            phone: customer.phone,
+            address: customer.address,
+            cart: JSON.stringify(cart.map(item => ({ id: item.id, name: item.name, quantity: item.quantity }))),
+        },
     };
     initializePayment({onSuccess: onPaymentSuccess, onClose: onPaymentClose, config: freshConfig});
   }
@@ -192,7 +228,32 @@ export default function CartPage() {
           </Card>
         </div>
 
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 space-y-8">
+           <Card>
+            <CardHeader>
+              <CardTitle>Customer Information</CardTitle>
+              <CardDescription>Please provide your details for delivery.</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-4">
+                <div className="grid gap-2">
+                    <Label htmlFor="name">Full Name</Label>
+                    <Input id="name" name="name" placeholder="John Doe" value={customer.name} onChange={handleCustomerChange} required />
+                </div>
+                <div className="grid gap-2">
+                    <Label htmlFor="email">Email Address</Label>
+                    <Input id="email" name="email" type="email" placeholder="you@example.com" value={customer.email} onChange={handleCustomerChange} required />
+                </div>
+                <div className="grid gap-2">
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <Input id="phone" name="phone" type="tel" placeholder="+233 12 345 6789" value={customer.phone} onChange={handleCustomerChange} required />
+                </div>
+                 <div className="grid gap-2">
+                    <Label htmlFor="address">Delivery Address</Label>
+                    <Input id="address" name="address" placeholder="123 Market St, Accra" value={customer.address} onChange={handleCustomerChange} required />
+                </div>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle>Order Summary</CardTitle>
@@ -234,7 +295,7 @@ export default function CartPage() {
               </div>
             </CardContent>
             <CardFooter className="flex flex-col gap-2">
-                <Button className="w-full" size="lg" onClick={handleCheckout}>
+                <Button className="w-full" size="lg" onClick={handleCheckout} disabled={!isFormValid}>
                   Proceed to Checkout
                 </Button>
                 <Button asChild variant="outline" className="w-full">
