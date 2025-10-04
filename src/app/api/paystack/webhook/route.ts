@@ -12,6 +12,12 @@ async function sendAdminNotification(payload: any) {
         return;
     }
 
+    const adminContact = process.env.ADMIN_EMAIL_OR_SMS_GATEWAY;
+    if (!adminContact) {
+        console.error("Admin contact address is not set. Please set ADMIN_EMAIL_OR_SMS_GATEWAY in your .env file.");
+        return;
+    }
+
     const customerName = data.metadata?.name || data.customer.name || 'A Customer';
     const totalAmount = (data.amount / 100).toFixed(2);
     const currency = data.currency;
@@ -45,14 +51,14 @@ Total Paid: ${currency} ${totalAmount}
     `;
 
     console.log("----- NEW ORDER NOTIFICATION -----");
-    console.log(`To: ${process.env.ADMIN_EMAIL_OR_SMS_GATEWAY}`);
+    console.log(`To: ${adminContact}`);
     console.log(`Subject: ${subject}`);
     console.log(`Body: \n${body}`);
     console.log("---------------------------------");
     
     // In a real implementation, you would replace the console logs
     // with your actual email sending logic (e.g., using Nodemailer, SendGrid, etc.)
-    // For SMS, the "To" address would be something like '1234567890@carrier.com'
+    // For SMS, the "To" address would be the adminContact variable.
     
     // Example with nodemailer (you'd need to install it: npm install nodemailer)
     /*
@@ -67,13 +73,13 @@ Total Paid: ${currency} ${totalAmount}
 
     await transporter.sendMail({
       from: `"VicqaTradeHub" <${process.env.EMAIL_USER}>`,
-      to: process.env.ADMIN_EMAIL_OR_SMS_GATEWAY,
+      to: adminContact,
       subject: subject,
       text: body,
     });
     */
 
-   console.log("Simulating sending notification email/SMS.");
+   console.log("Simulating sending notification to admin.");
 }
 
 
@@ -121,5 +127,3 @@ export async function POST(req: NextRequest) {
         return new NextResponse(`Webhook Error: ${message}`, { status: 400 });
     }
 }
-
-    
