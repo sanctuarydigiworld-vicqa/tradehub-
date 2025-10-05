@@ -1,10 +1,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import * as crypto from 'crypto';
-import nodemailer from 'nodemailer';
+import twilio from 'twilio';
 
 async function sendAdminNotification(payload: any) {
-    console.log("----- ATTEMPTING TO SEND ADMIN NOTIFICATION -----");
+    console.log("----- ATTEMPTING TO SEND ADMIN SMS NOTIFICATION -----");
     const { event, data } = payload;
     
     if (event !== 'charge.success') {
@@ -12,66 +12,36 @@ async function sendAdminNotification(payload: any) {
         return;
     }
 
-    const adminContact = process.env.ADMIN_EMAIL_OR_SMS_GATEWAY;
-    if (!adminContact) {
-        console.error("CRITICAL: Admin contact address (ADMIN_EMAIL_OR_SMS_GATEWAY) is not set in .env file.");
+    const accountSid = process.env.TWILIO_ACCOUNT_SID;
+    const authToken = process.env.TWILIO_AUTH_TOKEN;
+    const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
+    const adminPhoneNumber = process.env.ADMIN_PHONE_NUMBER; // Your personal phone number
+
+    if (!accountSid || !authToken || !twilioPhoneNumber || !adminPhoneNumber) {
+        console.error("CRITICAL: Twilio credentials (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER) or ADMIN_PHONE_NUMBER are not set in .env file.");
         return;
     }
 
-    const emailUser = process.env.EMAIL_USER;
-    const emailPass = process.env.EMAIL_PASSWORD;
-    if(!emailUser || !emailPass) {
-        console.error("CRITICAL: Email credentials (EMAIL_USER, EMAIL_PASSWORD) are not set in .env file.");
-        return;
-    }
+    console.log(`Twilio configured to send from: ${twilioPhoneNumber} to ${adminPhoneNumber}`);
 
-    console.log(`Notification will be sent from: ${emailUser}`);
-    console.log(`Notification will be sent to: ${adminContact}`);
+    const client = twilio(accountSid, authToken);
 
     const customerName = data.metadata?.name || data.customer?.name || 'A Customer';
     const totalAmount = (data.amount / 100).toFixed(2);
     const currency = data.currency;
-    const items = data.metadata?.cart ? JSON.parse(data.metadata.cart) : [];
 
-    const subject = `New Order on VicqaTradeHub! (Ref: ${data.reference})`;
-    
-    const itemList = items.map((item: any) => `- ${item.quantity}x ${item.name} @ ${currency} ${(item.price).toFixed(2)}`).join('\n');
-    
-    const body = `
-New Order (#${data.reference})
-Customer: ${customerName}
-Phone: ${data.metadata?.phone || 'N/A'}
-Address: ${data.metadata?.address || 'N/A'}
-
-Items:
-${itemList}
-
-Subtotal: ${currency} ${(data.metadata?.subtotal || 0).toFixed(2)}
-Shipping: ${currency} ${(data.metadata?.shipping || 0).toFixed(2)}
-Discount: ${currency} ${(data.metadata?.discount || 0).toFixed(2)}
-Total Paid: ${currency} ${totalAmount}
-    `;
-
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: emailUser,
-        pass: emailPass,
-      },
-    });
+    const body = `New VicqaTradeHub Order!\nRef: ${data.reference}\nCust: ${customerName}\nTotal: ${currency} ${totalAmount}`;
 
     try {
-        const info = await transporter.sendMail({
-          from: `"VicqaTradeHub" <${emailUser}>`,
-          to: adminContact,
-          subject: subject,
-          text: body,
+        const message = await client.messages.create({
+            body: body,
+            from: twilioPhoneNumber,
+            to: adminPhoneNumber,
         });
-        console.log("----- EMAIL NOTIFICATION SENT SUCCESSFULLY -----");
-        console.log("Message sent: %s", info.messageId);
-        console.log("Response from mail server: %s", info.response);
+        console.log("----- TWILIO SMS SENT SUCCESSFULLY -----");
+        console.log("Message SID: %s", message.sid);
     } catch (error) {
-        console.error("----- FAILED TO SEND EMAIL NOTIFICATION -----", error);
+        console.error("----- FAILED TO SEND TWILIO SMS -----", error);
     }
 }
 
