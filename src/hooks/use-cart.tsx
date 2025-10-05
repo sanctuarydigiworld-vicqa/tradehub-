@@ -21,7 +21,7 @@ interface CartContextType {
   addToCart: (product: Product) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
-  clearCart: () => void;
+  clearCart: (showToast?: boolean) => void;
   isInCart: (productId: string) => boolean;
 }
 
@@ -95,12 +95,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     updateLocalStorage(newCart);
   }, [rawCart, removeFromCart]);
 
-  const clearCart = useCallback(() => {
+  const clearCart = useCallback((showToast = false) => {
     updateLocalStorage([]);
-    toast({
-        title: 'Cart cleared',
-        description: 'All items have been removed from your cart.',
-    });
+    if (showToast) {
+        toast({
+            title: 'Cart cleared',
+            description: 'All items have been removed from your cart.',
+        });
+    }
   }, [toast]);
   
   const isInCart = useCallback((productId: string) => {

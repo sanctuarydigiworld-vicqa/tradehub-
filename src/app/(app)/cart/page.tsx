@@ -126,9 +126,9 @@ export default function CartPage() {
   const onPaymentSuccess = (reference: any) => {
     toast({
       title: 'Order Placed!',
-      description: `Your order was successful. Reference: ${reference.reference}`,
+      description: `Your order has been successfully placed. Ref: ${reference.reference}`,
     });
-    clearCart();
+    clearCart(false); // Pass false to prevent the toast in clearCart
     setDiscount(0);
     setAppliedCoupon('');
     setCouponCode('');
