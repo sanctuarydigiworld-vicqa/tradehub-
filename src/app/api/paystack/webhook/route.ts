@@ -53,7 +53,9 @@ Total Paid: ${currency} ${totalAmount}
     `;
 
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true, // use SSL
       auth: {
         user: emailUser,
         pass: emailPass, // App-specific password
