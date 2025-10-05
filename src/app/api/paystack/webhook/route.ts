@@ -56,7 +56,7 @@ Total Paid: ${currency} ${totalAmount}
       service: 'gmail',
       auth: {
         user: emailUser,
-        pass: emailPass, // App-specific password
+        pass: emailPass,
       },
     });
 
@@ -72,7 +72,6 @@ Total Paid: ${currency} ${totalAmount}
         console.log("Response from mail server: %s", info.response);
     } catch (error) {
         console.error("----- FAILED TO SEND EMAIL NOTIFICATION -----", error);
-        // We don't throw here because we don't want Paystack to retry failed notifications.
     }
 }
 
@@ -102,8 +101,6 @@ export async function POST(req: NextRequest) {
 
         if (hash !== signature) {
             console.warn("Invalid Paystack signature. This might be a test webhook from the Paystack dashboard.");
-            // For security, you might want to return 401 here in a real production environment
-            // but for debugging, we might proceed. For now, we will return an error.
             return new NextResponse('Invalid signature', { status: 401 });
         }
 
