@@ -26,6 +26,7 @@ export function LoginForm() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!auth) return;
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
@@ -47,6 +48,7 @@ export function LoginForm() {
   };
 
   const handleGoogleSignIn = async () => {
+    if (!auth) return;
     setGoogleLoading(true);
     const provider = new GoogleAuthProvider();
     try {
@@ -56,7 +58,7 @@ export function LoginForm() {
         description: 'Welcome!',
       });
       router.push('/dashboard');
-    } catch (error: any) => {
+    } catch (error: any) {
       console.error('Error with Google sign in: ', error);
       toast({
         title: 'Google Sign-In Failed',
