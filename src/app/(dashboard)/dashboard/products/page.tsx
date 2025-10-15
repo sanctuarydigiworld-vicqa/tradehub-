@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -20,48 +21,55 @@ import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { products as initialProducts } from '@/lib/placeholder-data';
 import Image from 'next/image';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, UploadCloud } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useEffect, useState } from 'react';
 import type { Product } from '@/lib/types';
+import { useAuth } from '@/hooks/use-auth';
+import { useFirebase } from '@/firebase';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import { collection, writeBatch } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
+import { useState } from 'react';
 
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const { firestore } = useFirebase();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [isSeeding, setIsSeeding] = useState(false);
 
-  useEffect(() => {
+  const productsQuery = user ? collection(firestore, 'products') : null;
+  const { data: products, isLoading } = useCollection<Product>(productsQuery as any);
+
+  const seedData = async () => {
+    if (!firestore || !user) return;
+    setIsSeeding(true);
     try {
-      const localProductsRaw = localStorage.getItem('products');
-      if (localProductsRaw) {
-        const localProducts = JSON.parse(localProductsRaw);
-        
-        const mappedLocalProducts = localProducts.map((localProduct: any) => ({
-              id: localProduct.id,
-              name: localProduct.name,
-              description: localProduct.description || '',
-              price: parseFloat(localProduct.price || 0),
-              category: localProduct.category || 'Uncategorized',
-              vendor: 'Current Vendor',
-              image: {
-                id: localProduct.id,
-                imageUrl: localProduct.image,
-                imageHint: 'custom product',
-                description: localProduct.name
-              }
-        }));
+      const batch = writeBatch(firestore);
+      const productsRef = collection(firestore, 'products');
 
-        // Use a map to ensure no duplicate products by ID
-        const productMap = new Map();
-        initialProducts.forEach(p => productMap.set(p.id, p));
-        mappedLocalProducts.forEach((p: Product) => productMap.set(p.id, p));
+      initialProducts.forEach(product => {
+        const docRef = collection(productsRef).doc();
+        batch.set(docRef, { ...product, vendor: user.uid });
+      });
 
-        setProducts(Array.from(productMap.values()));
-      }
-    } catch(e) {
-      console.error("Could not parse products from local storage", e);
-      setProducts(initialProducts);
+      await batch.commit();
+      toast({
+        title: 'Success!',
+        description: 'Placeholder products have been added to your store.',
+      });
+    } catch (error) {
+      console.error("Error seeding data:", error);
+      toast({
+        title: 'Error',
+        description: 'Could not seed placeholder products.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSeeding(false);
     }
-  }, []);
+  };
+
 
   return (
     <Card>
@@ -70,9 +78,15 @@ export default function ProductsPage() {
           <CardTitle>Your Products</CardTitle>
           <CardDescription>Manage your product inventory.</CardDescription>
         </div>
-        <Button asChild>
-          <Link href="/dashboard/products/new">Add Product</Link>
-        </Button>
+        <div className="flex items-center gap-2">
+            <Button onClick={seedData} variant="outline" disabled={isSeeding}>
+              <UploadCloud className="mr-2 h-4 w-4" />
+              {isSeeding ? 'Seeding...' : 'Seed Products'}
+            </Button>
+            <Button asChild>
+              <Link href="/dashboard/products/new">Add Product</Link>
+            </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <Table>
@@ -91,7 +105,12 @@ export default function ProductsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {products.map((product) => (
+            {isLoading && (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center">Loading products...</TableCell>
+              </TableRow>
+            )}
+            {!isLoading && products && products.map((product) => (
               <TableRow key={product.id}>
                 <TableCell className="hidden sm:table-cell">
                   <Image
@@ -109,7 +128,7 @@ export default function ProductsPage() {
                 </TableCell>
                 <TableCell>GH₵{product.price.toFixed(2)}</TableCell>
                 <TableCell className="hidden md:table-cell">
-                  2023-07-12 10:42 AM
+                  Just now
                 </TableCell>
                 <TableCell>
                   <DropdownMenu>
@@ -128,6 +147,14 @@ export default function ProductsPage() {
                 </TableCell>              
               </TableRow>
             ))}
+             {!isLoading && (!products || products.length === 0) && (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-10">
+                  <p className="font-semibold">No products found.</p>
+                  <p className="text-muted-foreground text-sm">Click "Seed Products" to add the default items, or add a new product.</p>
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </CardContent>

@@ -1,61 +1,27 @@
+
 {
   "entities": {
-    "Vendor": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Vendor",
+    "UserProfile": {
+      "title": "User Profile",
       "type": "object",
-      "description": "Represents a vendor selling products on TradeFlow.",
+      "description": "Represents a user's public profile.",
       "properties": {
-        "id": {
+        "displayName": {
           "type": "string",
-          "description": "Unique identifier for the Vendor entity."
+          "description": "The user's display name."
         },
-        "name": {
+        "photoURL": {
           "type": "string",
-          "description": "Name of the vendor."
-        },
-        "contactEmail": {
-          "type": "string",
-          "description": "Email address of the vendor.",
-          "format": "email"
-        },
-        "storeSettings": {
-          "type": "string",
-          "description": "Configuration settings for the vendor's store."
-        },
-        "registrationDate": {
-          "type": "string",
-          "description": "Date when the vendor registered.",
-          "format": "date-time"
-        },
-        "isApproved": {
-          "type": "boolean",
-          "description": "Indicates whether the vendor's registration has been approved by the admin."
+          "description": "URL of the user's profile picture.",
+          "format": "uri"
         }
-      },
-      "required": [
-        "id",
-        "name",
-        "contactEmail",
-        "storeSettings",
-        "registrationDate",
-        "isApproved"
-      ]
+      }
     },
     "Product": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Product",
       "type": "object",
       "description": "Represents a product listed for sale on TradeFlow.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Product entity."
-        },
-        "vendorId": {
-          "type": "string",
-          "description": "Reference to Vendor. (Relationship: Vendor 1:N Product)"
-        },
         "name": {
           "type": "string",
           "description": "Name of the product."
@@ -64,223 +30,39 @@
           "type": "string",
           "description": "Description of the product."
         },
-        "imageUrl": {
-          "type": "string",
-          "description": "URL of the product image.",
-          "format": "uri"
-        },
         "price": {
           "type": "number",
           "description": "Price of the product."
         },
         "category": {
           "type": "string",
-          "description": "Category of the product (e.g., Church Supplies, Sacramentals)."
+          "description": "Category of the product."
         },
-        "listingDate": {
+        "vendor": {
           "type": "string",
-          "description": "Date when the product was listed.",
-          "format": "date-time"
+          "description": "The ID of the user who is the vendor."
+        },
+        "image": {
+          "type": "object",
+          "properties": {
+            "imageUrl": {
+              "type": "string",
+              "format": "uri"
+            },
+            "imageHint": {
+              "type": "string"
+            }
+          },
+          "required": ["imageUrl", "imageHint"]
         }
       },
       "required": [
-        "id",
-        "vendorId",
         "name",
         "description",
-        "imageUrl",
         "price",
         "category",
-        "listingDate"
-      ]
-    },
-    "Order": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Order",
-      "type": "object",
-      "description": "Represents an order placed by a buyer.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Order entity."
-        },
-        "buyerId": {
-          "type": "string",
-          "description": "Reference to Buyer. (Relationship: Buyer 1:N Order)"
-        },
-        "orderDate": {
-          "type": "string",
-          "description": "Date when the order was placed.",
-          "format": "date-time"
-        },
-        "totalAmount": {
-          "type": "number",
-          "description": "Total amount of the order."
-        },
-        "status": {
-          "type": "string",
-          "description": "Current status of the order (e.g., Placed, Shipped, Delivered)."
-        }
-      },
-      "required": [
-        "id",
-        "buyerId",
-        "orderDate",
-        "totalAmount",
-        "status"
-      ]
-    },
-    "OrderItem": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "OrderItem",
-      "type": "object",
-      "description": "Represents an item within an order.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the OrderItem entity."
-        },
-        "orderId": {
-          "type": "string",
-          "description": "Reference to Order. (Relationship: Order 1:N OrderItem)"
-        },
-        "productId": {
-          "type": "string",
-          "description": "Reference to Product. (Relationship: Product 1:N OrderItem)"
-        },
-        "quantity": {
-          "type": "number",
-          "description": "Quantity of the product in the order item."
-        },
-        "itemPrice": {
-          "type": "number",
-          "description": "Price of the item at the time of the order."
-        }
-      },
-      "required": [
-        "id",
-        "orderId",
-        "productId",
-        "quantity",
-        "itemPrice"
-      ]
-    },
-    "Buyer": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Buyer",
-      "type": "object",
-      "description": "Represents a buyer on TradeFlow.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Buyer entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "Name of the buyer."
-        },
-        "email": {
-          "type": "string",
-          "description": "Email address of the buyer.",
-          "format": "email"
-        },
-        "shippingAddress": {
-          "type": "string",
-          "description": "Shipping address of the buyer."
-        }
-      },
-      "required": [
-        "id",
-        "name",
-        "email",
-        "shippingAddress"
-      ]
-    },
-    "Payment": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Payment",
-      "type": "object",
-      "description": "Represents a payment made for an order.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Payment entity."
-        },
-        "orderId": {
-          "type": "string",
-          "description": "Reference to Order. (Relationship: Order 1:1 Payment)"
-        },
-        "paymentDate": {
-          "type": "string",
-          "description": "Date when the payment was made.",
-          "format": "date-time"
-        },
-        "amount": {
-          "type": "number",
-          "description": "Amount paid."
-        },
-        "paymentMethod": {
-          "type": "string",
-          "description": "Payment method used (e.g., Credit Card, PayPal)."
-        },
-        "transactionId": {
-          "type": "string",
-          "description": "Transaction ID from the payment gateway."
-        },
-        "status": {
-          "type": "string",
-          "description": "Status of the payment (e.g., Success, Failed, Pending)."
-        }
-      },
-      "required": [
-        "id",
-        "orderId",
-        "paymentDate",
-        "amount",
-        "paymentMethod",
-        "transactionId",
-        "status"
-      ]
-    },
-    "Notification": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Notification",
-      "type": "object",
-      "description": "Represents a notification sent to a user or admin.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Notification entity."
-        },
-        "recipientId": {
-          "type": "string",
-          "description": "Identifier of the user or admin receiving the notification."
-        },
-        "message": {
-          "type": "string",
-          "description": "Content of the notification message."
-        },
-        "notificationType": {
-          "type": "string",
-          "description": "Type of notification (e.g., Order Placed, Payment Received)."
-        },
-        "timestamp": {
-          "type": "string",
-          "description": "Timestamp when the notification was created.",
-          "format": "date-time"
-        },
-        "isRead": {
-          "type": "boolean",
-          "description": "Indicates whether the notification has been read."
-        }
-      },
-      "required": [
-        "id",
-        "recipientId",
-        "message",
-        "notificationType",
-        "timestamp",
-        "isRead"
+        "vendor",
+        "image"
       ]
     }
   },
@@ -291,140 +73,17 @@
     ]
   },
   "firestore": {
-    "structure": [
-      {
-        "path": "/vendors/{vendorId}",
-        "definition": {
-          "entityName": "Vendor",
-          "schema": {
-            "$ref": "#/backend/entities/Vendor"
-          },
-          "description": "Stores vendor profiles. Approval status (isApproved) is critical for controlling product visibility.",
-          "params": [
-            {
-              "name": "vendorId",
-              "description": "Unique identifier for the vendor."
-            }
-          ]
-        }
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/UserProfile"
       },
-      {
-        "path": "/vendors/{vendorId}/products/{productId}",
-        "definition": {
-          "entityName": "Product",
-          "schema": {
-            "$ref": "#/backend/entities/Product"
-          },
-          "description": "Stores products listed by vendors. Includes denormalized 'isApproved' field from the parent Vendor document for authorization independence.",
-          "params": [
-            {
-              "name": "vendorId",
-              "description": "Unique identifier for the vendor."
-            },
-            {
-              "name": "productId",
-              "description": "Unique identifier for the product."
-            }
-          ]
-        }
+      "description": "Stores public user profiles."
+    },
+    "/products/{productId}": {
+      "schema": {
+        "$ref": "#/entities/Product"
       },
-      {
-        "path": "/buyers/{buyerId}",
-        "definition": {
-          "entityName": "Buyer",
-          "schema": {
-            "$ref": "#/backend/entities/Buyer"
-          },
-          "description": "Stores buyer profiles.",
-          "params": [
-            {
-              "name": "buyerId",
-              "description": "Unique identifier for the buyer."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/buyers/{buyerId}/orders/{orderId}",
-        "definition": {
-          "entityName": "Order",
-          "schema": {
-            "$ref": "#/backend/entities/Order"
-          },
-          "description": "Stores orders placed by buyers.",
-          "params": [
-            {
-              "name": "buyerId",
-              "description": "Unique identifier for the buyer."
-            },
-            {
-              "name": "orderId",
-              "description": "Unique identifier for the order."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/buyers/{buyerId}/orders/{orderId}/orderItems/{orderItemId}",
-        "definition": {
-          "entityName": "OrderItem",
-          "schema": {
-            "$ref": "#/backend/entities/OrderItem"
-          },
-          "description": "Stores items within an order.",
-          "params": [
-            {
-              "name": "buyerId",
-              "description": "Unique identifier for the buyer."
-            },
-            {
-              "name": "orderId",
-              "description": "Unique identifier for the order."
-            },
-            {
-              "name": "orderItemId",
-              "description": "Unique identifier for the order item."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/orders/{orderId}/payments/{paymentId}",
-        "definition": {
-          "entityName": "Payment",
-          "schema": {
-            "$ref": "#/backend/entities/Payment"
-          },
-          "description": "Stores payments made for an order.",
-          "params": [
-            {
-              "name": "orderId",
-              "description": "Unique identifier for the order."
-            },
-            {
-              "name": "paymentId",
-              "description": "Unique identifier for the payment."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/notifications/{notificationId}",
-        "definition": {
-          "entityName": "Notification",
-          "schema": {
-            "$ref": "#/backend/entities/Notification"
-          },
-          "description": "Stores notifications sent to users and admins.",
-          "params": [
-            {
-              "name": "notificationId",
-              "description": "Unique identifier for the notification."
-            }
-          ]
-        }
-      }
-    ],
-    "reasoning": "The Firestore structure is designed to ensure authorization independence, clarity, and scalability. It leverages denormalization and structural segregation to simplify security rules and optimize query performance.\n\n1.  **Vendors and Products:** Products are stored as subcollections of `/vendors/{vendorId}`. This enforces ownership and allows efficient querying of products by vendor. Vendor approval status is denormalized into each product document to avoid `get()` calls in security rules when listing products (Authorization Independence). This denormalization supports QAPs because the isApproved flag can be checked in the security rules without reading the vendor document. This structure ensures that products can only be listed if the associated vendor has been approved by the administrator. Products which are not approved will not be visible.\n2.  **Buyers and Orders:** Orders are stored as subcollections of `/buyers/{buyerId}`. This allows efficient retrieval of a buyer's order history. The OrderItems are then stored as a subcollection of each order.\n3.  **Payments:** Payments are stored in a subcollection of `/orders/{orderId}`. This facilitates easy retrieval of payment information related to a specific order and the relation between the payment and the order.\n4.  **Notifications:** Notifications are stored in the `/notifications/{notificationId}` collection. Each notification includes a recipientId, allowing for easy querying of notifications for a specific user.  This also separates notification types, ensuring different security requirements don't impact each other (Structural Segregation).\n5.  **Admin Approval:** The `vendors/{vendorId}` collection includes the `isApproved` boolean, directly controlling data visibility. This explicit state modeling simplifies rules and avoids complex logic.\n\nThis structure prioritizes path-based ownership where possible and membership maps (in this case, a single boolean flag) where direct ownership isn't feasible, enabling secure and scalable data access."
+      "description": "Stores all products available on the marketplace."
+    }
   }
 }
