@@ -1,157 +1,62 @@
 /**
- * @fileoverview Firestore Security Rules for TradeFlow.
- *
- * Core Philosophy:
- * This ruleset enforces a strict ownership model for user-generated data and employs denormalization to optimize security rule performance.
- * It also supports public read access for product listings when the associated vendor is approved.
- *
- * Data Structure:
- * - Vendors: `/vendors/{vendorId}`
- * - Products: `/vendors/{vendorId}/products/{productId}`
- * - Buyers: `/buyers/{buyerId}`
- * - Orders: `/buyers/{buyerId}/orders/{orderId}`
- * - Order Items: `/buyers/{buyerId}/orders/{orderId}/orderItems/{orderItemId}`
- * - Payments: `/orders/{orderId}/payments/{paymentId}`
- * - Notifications: `/notifications/{notificationId}`
- *
- * Key Security Decisions:
- * - Vendors can only manage their own products.
- * - Buyers can only access their own orders.
- * - Products inherit the approval status of their parent vendor (denormalization).
- * - Public read access to products is allowed only if the vendor is approved.
- * - Notifications can be created by anyone. This may be insecure.
- *
- * Denormalization for Authorization:
- * - The `Product` entity contains an `isApproved` field, copied from the parent `Vendor` document.
- *   This avoids the need for costly `get()` calls to the `Vendor` document when evaluating product read permissions.
- *   The rules enforce that this field is immutable after creation.
- *   For example, the product read rules use `resource.data.isApproved` directly instead of fetching the vendor's `isApproved` status.
- *
- * Structural Segregation:
- * - No explicit segregation is applied, but the use of subcollections provides implicit segregation.
+ * @description This ruleset enforces a public read, owner-write model for products, and restricts user profile access to the owner.
+ * @dataStructure
+ *  - /users/{userId} - Stores public user profiles, accessible only to the owning user.
+ *  - /products/{productId} - Stores product listings, publicly readable but only writable by the product's vendor.
+ * @keySecurityDecisions
+ *  - Product listings are publicly readable to maximize marketplace visibility.
+ *  - User profiles are private; only the owner can read or modify their own profile.
+ *  - The 'vendor' field in the Product document is used to enforce ownership for product modifications.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Controls access to vendor profiles.
-     * @path /vendors/{vendorId}
-     * @allow (create, update, delete) if the user's auth UID matches the vendorId.
-     * @allow (get, list) if true
-     * @deny (create, update, delete) if the user is not authenticated or vendorId does not match.
-     * @principle Enforces document ownership for writes. Allows public read access.
+     * @description Allows users to read and write their own profile data.
+     * @path /users/{userId}
+     * @allow (get, list) User with matching {userId} can read their profile.
+     * @allow (create, update, delete) User with matching {userId} can modify their profile.
+     * @deny (get, list) User without matching {userId} cannot read other profiles.
+     * @deny (create, update, delete) User without matching {userId} cannot modify other profiles.
+     * @principle Enforces document ownership for user profiles.
      */
-    match /vendors/{vendorId} {
-      allow get, list: if true;
-      allow create: if isSignedIn() && request.auth.uid == vendorId;
-      allow update: if isExistingOwner(vendorId);
-      allow delete: if isExistingOwner(vendorId);
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) && resource.data.id == userId;
+      allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Controls access to products listed by vendors.
-     * @path /vendors/{vendorId}/products/{productId}
-     * @allow (create) if the user is the vendor and the vendor is approved. The isApproved flag must match the current vendor.
-     * @allow (get, list) if the vendor is approved (resource.data.isApproved == true).
-     * @allow (update, delete) if the user is the vendor.
-     * @deny (create, update, delete) if the user is not the vendor.
-     * @principle Enforces vendor ownership of products and requires vendor approval for product visibility.
+     * @description Allows anyone to read product listings, but only the vendor can create, update, or delete.
+     * @path /products/{productId}
+     * @allow (get, list) Any user can read product listings.
+     * @allow (create) Only the vendor can create a product listing, and must set the 'vendor' field to their UID.
+     * @allow (update, delete) Only the vendor can update or delete a product listing.
+     * @deny (create) A user cannot create a product listing with a 'vendor' field that doesn't match their UID.
+     * @deny (update, delete) A non-vendor cannot update or delete a product listing.
+     * @principle Public read, owner-only writes for product listings.
      */
-    match /vendors/{vendorId}/products/{productId} {
-      allow get, list: if true;
-      allow create: if isSignedIn() && request.auth.uid == vendorId;
-      allow update: if isExistingOwner(vendorId);
-      allow delete: if isExistingOwner(vendorId);
+    match /products/{productId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn() && request.resource.data.vendor == request.auth.uid;
+      allow update: if isSignedIn() && isExistingOwner(resource.data.vendor);
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.vendor);
     }
 
-    /**
-     * @description Controls access to buyer profiles.
-     * @path /buyers/{buyerId}
-     * @allow (create, update, delete) if the user's auth UID matches the buyerId.
-     * @allow (get, list) if the user's auth UID matches the buyerId.
-     * @deny (create, update, delete) if the user is not authenticated or buyerId does not match.
-     * @principle Enforces document ownership for writes.
-     */
-    match /buyers/{buyerId} {
-      allow get, list: if isOwner(buyerId);
-      allow create: if isSignedIn() && request.auth.uid == buyerId;
-      allow update: if isExistingOwner(buyerId);
-      allow delete: if isExistingOwner(buyerId);
+    function isSignedIn() {
+      return request.auth != null;
     }
 
-    /**
-     * @description Controls access to orders placed by buyers.
-     * @path /buyers/{buyerId}/orders/{orderId}
-     * @allow (create, update, delete) if the user's auth UID matches the buyerId.
-     * @allow (get, list) if the user's auth UID matches the buyerId.
-     * @deny (create, update, delete) if the user is not authenticated or buyerId does not match.
-     * @principle Enforces document ownership for writes.
-     */
-    match /buyers/{buyerId}/orders/{orderId} {
-      allow get, list: if isOwner(buyerId);
-      allow create: if isSignedIn() && request.auth.uid == buyerId;
-      allow update: if isExistingOwner(buyerId);
-      allow delete: if isExistingOwner(buyerId);
+    function isOwner(userId) {
+      return request.auth.uid == userId;
     }
 
-    /**
-     * @description Controls access to order items within an order.
-     * @path /buyers/{buyerId}/orders/{orderId}/orderItems/{orderItemId}
-     * @allow (create, update, delete) if the user's auth UID matches the buyerId.
-     * @allow (get, list) if the user's auth UID matches the buyerId.
-     * @deny (create, update, delete) if the user is not authenticated or buyerId does not match.
-     * @principle Enforces document ownership for writes.
-     */
-    match /buyers/{buyerId}/orders/{orderId}/orderItems/{orderItemId} {
-      allow get, list: if isOwner(buyerId);
-      allow create: if isSignedIn() && request.auth.uid == buyerId;
-      allow update: if isExistingOwner(buyerId);
-      allow delete: if isExistingOwner(buyerId);
+    function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
     }
-
-    /**
-     * @description Controls access to payments made for an order.
-     * @path /orders/{orderId}/payments/{paymentId}
-     * @allow (create) if true; // Payments are not linked to buyers.
-     * @allow (get, list) if true; // Payments are not linked to buyers.
-     * @allow update: if false;
-     * @allow delete: if false;
-     * @principle No ownership enforced.
-     */
-    match /orders/{orderId}/payments/{paymentId} {
-      allow get, list: if true;
-      allow create: if true;
-      allow update: if false;
-      allow delete: if false;
-    }
-
-    /**
-     * @description Controls access to notifications sent to users and admins.
-     * @path /notifications/{notificationId}
-     * @allow get, list: if true; // Notifications are public.
-     * @allow create: if true; // Anyone can create notifications. This should be secured later with admin roles.
-     * @allow update: if false;
-     * @allow delete: if false;
-     * @principle Notifications are publicly readable, and anyone can create them, but cannot update or delete.
-     */
-    match /notifications/{notificationId} {
-      allow get, list: if true;
-      allow create: if true; // CRITICAL: This should be restricted to admins or specific users later.
-      allow update: if false;
-      allow delete: if false;
-    }
-  }
-
-  function isSignedIn() {
-    return request.auth != null;
-  }
-
-  function isOwner(userId) {
-    return isSignedIn() && request.auth.uid == userId;
-  }
-
-  function isExistingOwner(userId) {
-    return isOwner(userId) && resource != null;
   }
 }
