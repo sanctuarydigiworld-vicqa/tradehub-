@@ -4,7 +4,10 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import type { Product } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { products as allProducts } from '@/lib/placeholder-data'; // Assuming this has all products
+import { useFirebase } from '@/firebase';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import { collection } from 'firebase/firestore';
+
 
 export type CartItem = { 
   productId: string; 
@@ -30,6 +33,11 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [rawCart, setRawCart] = useState<CartItem[]>([]);
   const { toast } = useToast();
+  
+  const { firestore } = useFirebase();
+  const productsQuery = firestore ? collection(firestore, 'products') : null;
+  const { data: allProducts } = useCollection<Product>(productsQuery);
+
 
   useEffect(() => {
     try {
@@ -110,40 +118,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [rawCart]);
 
   const cart = useMemo(() => {
-     // Create a map of all available products for quick lookup
+    if (!allProducts) {
+        return [];
+    }
+
     const productMap = new Map<string, Product>();
     allProducts.forEach(p => productMap.set(p.id, p));
-
-    // Also consider products from localStorage if they exist
-    try {
-        const localProductsRaw = localStorage.getItem('products');
-        if (localProductsRaw) {
-            const localProducts = JSON.parse(localProductsRaw);
-            localProducts.forEach((p: any) => {
-                if (!productMap.has(p.id)) {
-                     const product: Product = {
-                        id: p.id,
-                        name: p.name,
-                        description: p.description || '',
-                        price: parseFloat(p.price || 0),
-                        category: p.category || 'Uncategorized',
-                        vendor: 'Current Vendor',
-                        image: {
-                            id: p.id,
-                            imageUrl: p.image,
-                            imageHint: 'custom product',
-                            description: p.name
-                        }
-                    };
-                    productMap.set(p.id, product);
-                }
-            });
-        }
-    } catch(e) {
-        console.error("Could not parse local products for cart hydration", e);
-    }
     
-
     return rawCart
       .map(item => {
         const product = productMap.get(item.productId);
@@ -154,7 +135,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         };
       })
       .filter((item): item is CartItemWithProduct => item !== null);
-  }, [rawCart]);
+  }, [rawCart, allProducts]);
 
 
   const value = {

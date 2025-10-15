@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { generateDescriptionAction } from '@/app/actions';
 import {
   Card,
@@ -25,13 +26,48 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
+import { useFirebase, useUser } from '@/firebase';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { useRouter } from 'next/navigation';
+import type { Product } from '@/lib/types';
+import { categories } from '@/lib/placeholder-data';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
-export function AiProductForm() {
+export function AiProductForm({ productId }: { productId?: string }) {
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
   const [productDescription, setProductDescription] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isEditMode, setIsEditMode] = useState(!!productId);
+  const [product, setProduct] = useState<Partial<Product>>({});
+
+  const { firestore } = useFirebase();
+  const { user } = useUser();
+  const router = useRouter();
+
+
+  useEffect(() => {
+    if (productId && firestore) {
+      setIsEditMode(true);
+      const fetchProduct = async () => {
+        const docRef = doc(firestore, 'products', productId);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const productData = docSnap.data() as Product;
+          setProduct(productData);
+          setProductDescription(productData.description || '');
+          setImagePreview(productData.image?.imageUrl || null);
+        } else {
+          toast({ title: 'Error', description: 'Product not found.', variant: 'destructive'});
+          router.push('/dashboard/products');
+        }
+      };
+      fetchProduct();
+    }
+  }, [productId, firestore, toast, router]);
+
 
   const handleFormAction = async (formData: FormData) => {
     setIsLoading(true);
@@ -65,73 +101,76 @@ export function AiProductForm() {
     }
   };
 
-  const handlePublish = () => {
-    if (!formRef.current) return;
+  const handlePublish = async () => {
+    if (!formRef.current || !firestore || !user) return;
+    setIsSaving(true);
 
     const formData = new FormData(formRef.current);
     const productName = formData.get('productName') as string;
     const price = formData.get('price') as string;
+    const category = formData.get('productCategory') as string;
+    const features = (formData.get('productFeatures') as string).split(',').map(f => f.trim()).filter(Boolean);
 
     if (!productName) {
-      toast({
-        title: 'Missing Product Name',
-        description: 'Please enter a name for your product.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Missing Product Name', description: 'Please enter a name for your product.', variant: 'destructive'});
+      setIsSaving(false);
       return;
     }
-    
     if (!imagePreview) {
-      toast({
-        title: 'Missing Image',
-        description: 'Please upload an image for your product.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Missing Image', description: 'Please upload an image for your product.', variant: 'destructive' });
+      setIsSaving(false);
       return;
     }
-    
     if (!price || parseFloat(price) <= 0) {
-      toast({
-        title: 'Invalid Price',
-        description: 'Please enter a valid price for your product.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Invalid Price', description: 'Please enter a valid price for your product.', variant: 'destructive' });
+      setIsSaving(false);
+      return;
+    }
+     if (!category) {
+      toast({ title: 'Missing Category', description: 'Please select a category.', variant: 'destructive'});
+      setIsSaving(false);
       return;
     }
 
-    const productData = {
-      id: new Date().toISOString(),
+    const docId = productId || doc(collection(firestore, 'products')).id;
+    
+    // Find a placeholder image for hint, or default.
+    const imageHintData = PlaceHolderImages.find(p => p.imageUrl === imagePreview) || { imageHint: 'product ' + category.toLowerCase(), id: docId, description: productName };
+
+    const productData: Product = {
+      id: docId,
       name: productName,
-      price: price,
-      features: formData.get('productFeatures'),
-      category: formData.get('productCategory'),
+      price: parseFloat(price),
+      category: category,
       description: productDescription,
-      image: imagePreview,
+      image: {
+        id: imageHintData.id,
+        imageUrl: imagePreview,
+        imageHint: imageHintData.imageHint,
+        description: imageHintData.description,
+      },
+      vendor: user.uid,
+      features: features,
     };
     
     try {
-        const existingProductsRaw = localStorage.getItem('products');
-        const existingProducts = existingProductsRaw ? JSON.parse(existingProductsRaw) : [];
-        const updatedProducts = [...existingProducts, productData];
-        localStorage.setItem('products', JSON.stringify(updatedProducts));
+        await setDoc(doc(firestore, 'products', docId), productData, { merge: isEditMode });
         
         toast({
-            title: 'Product Published!',
+            title: `Product ${isEditMode ? 'Updated' : 'Published'}!`,
             description: `${productName} has been saved.`,
         });
-        // Optionally clear the form
-        if (formRef.current) {
-          formRef.current.reset();
-        }
-        setProductDescription('');
-        setImagePreview(null);
+        router.push('/dashboard/products');
+
     } catch (error) {
         console.error("Error saving product:", error);
         toast({
             title: 'Error Saving Product',
-            description: 'There was an issue saving your product to local storage.',
+            description: 'There was an issue saving your product to Firestore.',
             variant: 'destructive',
         });
+    } finally {
+        setIsSaving(false);
     }
   };
 
@@ -182,6 +221,7 @@ export function AiProductForm() {
                     id="productName"
                     name="productName"
                     placeholder="e.g. Hand-carved Wooden Cross"
+                    defaultValue={product.name}
                     required
                   />
                 </div>
@@ -192,6 +232,7 @@ export function AiProductForm() {
                     name="price"
                     type="number"
                     placeholder="e.g. 29.99"
+                    defaultValue={product.price}
                     required
                     step="0.01"
                   />
@@ -205,8 +246,22 @@ export function AiProductForm() {
                 id="productFeatures"
                 name="productFeatures"
                 placeholder="e.g. Made from olive wood, Hand-carved in Bethlehem, Smooth finish"
+                defaultValue={product.features?.join(', ')}
                 required
               />
+            </div>
+             <div className="grid gap-2">
+                <Label htmlFor="productCategory">Product Category</Label>
+                 <Select name="productCategory" defaultValue={product.category}>
+                    <SelectTrigger id="productCategory">
+                        <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {categories.map(category => (
+                            <SelectItem key={category.id} value={category.name}>{category.name}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
             </div>
           </CardContent>
         </Card>
@@ -220,14 +275,6 @@ export function AiProductForm() {
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
             <div className="grid gap-2">
-              <Label htmlFor="productCategory">Product Category</Label>
-              <Input
-                id="productCategory"
-                name="productCategory"
-                placeholder="e.g. Sacramentals"
-              />
-            </div>
-            <div className="grid gap-2">
               <Label htmlFor="targetAudience">Target Audience</Label>
               <Input
                 id="targetAudience"
@@ -235,7 +282,7 @@ export function AiProductForm() {
                 placeholder="e.g. Devout Catholics, Gift shoppers"
               />
             </div>
-            <div className="grid gap-2 sm:col-span-2">
+            <div className="grid gap-2">
               <Label htmlFor="stylePreferences">Tone & Style</Label>
               <Select name="stylePreferences" defaultValue="engaging">
                 <SelectTrigger>
@@ -252,7 +299,7 @@ export function AiProductForm() {
             </div>
           </CardContent>
           <CardFooter>
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" disabled={isLoading || isSaving}>
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -289,8 +336,10 @@ export function AiProductForm() {
             />
           </CardContent>
           <CardFooter className="flex justify-end gap-2">
-            <Button variant="outline">Save as Draft</Button>
-            <Button onClick={handlePublish}>Publish Product</Button>
+            <Button variant="outline" disabled={isSaving}>Save as Draft</Button>
+            <Button onClick={handlePublish} disabled={isSaving || isLoading}>
+              {isSaving ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Publish Product')}
+            </Button>
           </CardFooter>
         </Card>
       </div>

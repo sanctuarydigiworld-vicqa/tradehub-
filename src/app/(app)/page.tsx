@@ -1,7 +1,8 @@
+
 'use client';
 
 import { useState } from 'react';
-import { categories, products } from '@/lib/placeholder-data';
+import { categories } from '@/lib/placeholder-data';
 import ProductCard from '@/components/product-card';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
@@ -15,6 +16,10 @@ import {
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
+import { useFirebase } from '@/firebase';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import { collection } from 'firebase/firestore';
+import type { Product } from '@/lib/types';
 
 const AnimatedCart = () => (
   <div className="relative w-24 h-24 mb-4 text-primary">
@@ -96,15 +101,20 @@ const AnimatedCart = () => (
 export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  const defaultProducts = products.slice(0, 6);
-  
-  const filteredProducts = selectedCategory
-    ? products.filter((product) => product.category === selectedCategory)
-    : defaultProducts;
-  
+  const { firestore } = useFirebase();
+  const productsQuery = firestore ? collection(firestore, 'products') : null;
+  const { data: products, isLoading } = useCollection<Product>(productsQuery);
+
+  const defaultProducts = products ? products.slice(0, 6) : [];
+
+  const filteredProducts =
+    selectedCategory && products
+      ? products.filter((product) => product.category === selectedCategory)
+      : defaultProducts;
+
   const handleCategoryClick = (categoryName: string | null) => {
     setSelectedCategory(categoryName);
-  }
+  };
 
   return (
     <>
@@ -156,14 +166,17 @@ export default function Home() {
               </Button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredProducts.map((product) => (
+              {isLoading && Array.from({ length: 6 }).map((_, i) => <ProductCard.Skeleton key={i} />)}
+              {!isLoading && filteredProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
-            {filteredProducts.length === 0 && (
-                <div className="text-center col-span-full py-12">
-                    <p className="text-muted-foreground">No products found in this category.</p>
-                </div>
+            {!isLoading && filteredProducts.length === 0 && (
+              <div className="text-center col-span-full py-12">
+                <p className="text-muted-foreground">
+                  No products found in this category.
+                </p>
+              </div>
             )}
           </div>
 
@@ -176,33 +189,45 @@ export default function Home() {
               </CardHeader>
               <CardContent>
                 <nav className="flex flex-col space-y-2">
-                   <button
-                        onClick={() => handleCategoryClick(null)}
-                        className={cn(
-                            "flex items-center justify-between p-3 rounded-lg text-foreground transition-colors duration-200 group",
-                            !selectedCategory ? "bg-secondary font-semibold" : "hover:bg-secondary"
-                        )}
-                    >
-                        <span className="font-medium">All Products</span>
-                         <ChevronRight className={cn(
-                            "h-5 w-5 text-muted-foreground transition-transform duration-200 group-hover:translate-x-1",
-                            !selectedCategory ? "text-foreground translate-x-1" : "group-hover:text-foreground"
-                         )} />
-                    </button>
+                  <button
+                    onClick={() => handleCategoryClick(null)}
+                    className={cn(
+                      'flex items-center justify-between p-3 rounded-lg text-foreground transition-colors duration-200 group',
+                      !selectedCategory
+                        ? 'bg-secondary font-semibold'
+                        : 'hover:bg-secondary'
+                    )}
+                  >
+                    <span className="font-medium">All Products</span>
+                    <ChevronRight
+                      className={cn(
+                        'h-5 w-5 text-muted-foreground transition-transform duration-200 group-hover:translate-x-1',
+                        !selectedCategory
+                          ? 'text-foreground translate-x-1'
+                          : 'group-hover:text-foreground'
+                      )}
+                    />
+                  </button>
                   {categories.map((category) => (
                     <button
                       key={category.id}
                       onClick={() => handleCategoryClick(category.name)}
                       className={cn(
-                        "flex items-center justify-between p-3 rounded-lg text-foreground transition-colors duration-200 group",
-                        selectedCategory === category.name ? "bg-secondary font-semibold" : "hover:bg-secondary"
+                        'flex items-center justify-between p-3 rounded-lg text-foreground transition-colors duration-200 group',
+                        selectedCategory === category.name
+                          ? 'bg-secondary font-semibold'
+                          : 'hover:bg-secondary'
                       )}
                     >
                       <span className="font-medium">{category.name}</span>
-                      <ChevronRight className={cn(
-                        "h-5 w-5 text-muted-foreground transition-transform duration-200 group-hover:translate-x-1",
-                        selectedCategory === category.name ? "text-foreground translate-x-1" : "group-hover:text-foreground"
-                      )} />
+                      <ChevronRight
+                        className={cn(
+                          'h-5 w-5 text-muted-foreground transition-transform duration-200 group-hover:translate-x-1',
+                          selectedCategory === category.name
+                            ? 'text-foreground translate-x-1'
+                            : 'group-hover:text-foreground'
+                        )}
+                      />
                     </button>
                   ))}
                 </nav>

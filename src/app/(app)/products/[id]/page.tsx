@@ -1,7 +1,7 @@
 
 'use client';
 
-import { products } from '@/lib/placeholder-data';
+import { products as placeholderProducts } from '@/lib/placeholder-data';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -26,8 +26,11 @@ import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import type { Product } from '@/lib/types';
-import { useEffect, useState } from 'react';
 import { useCart } from '@/hooks/use-cart.tsx';
+import { useFirebase } from '@/firebase';
+import { useDoc } from '@/firebase/firestore/use-doc';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import { doc, collection, query, where, limit } from 'firebase/firestore';
 
 // SVG for WhatsApp icon as it's not in lucide-react
 const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -48,42 +51,27 @@ const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
   );
 
 export default function ProductPage({ params }: { params: { id: string } }) {
-  const [allProducts, setAllProducts] = useState<Product[]>(products);
+  const { firestore } = useFirebase();
   const { addToCart, isInCart } = useCart();
+  
+  const productRef = firestore ? doc(firestore, 'products', params.id) : null;
+  const { data: product, isLoading: isProductLoading } = useDoc<Product>(productRef);
 
-  useEffect(() => {
-    try {
-      const localProductsRaw = localStorage.getItem('products');
-      if (localProductsRaw) {
-        const localProducts = JSON.parse(localProductsRaw);
-        const mappedLocalProducts: Product[] = localProducts.map((p: any) => ({
-          id: p.id,
-          name: p.name,
-          description: p.description || '',
-          price: parseFloat(p.price || 0),
-          category: p.category || 'Uncategorized',
-          vendor: 'Current Vendor',
-          image: {
-            id: p.id,
-            imageUrl: p.image,
-            imageHint: 'custom product',
-            description: p.name
-          }
-        }));
-
-        const productMap = new Map();
-        products.forEach(p => productMap.set(p.id, p));
-        mappedLocalProducts.forEach(p => productMap.set(p.id, p));
-        setAllProducts(Array.from(productMap.values()));
-      }
-    } catch(e) {
-      console.error("Could not parse products from local storage", e);
-      setAllProducts(products);
-    }
-  }, []);
-
-  const product = allProducts.find((p) => p.id === params.id);
   const isProductInCart = product ? isInCart(product.id) : false;
+
+  const relatedProductsQuery = firestore && product
+    ? query(
+        collection(firestore, 'products'),
+        where('category', '==', product.category),
+        where('__name__', '!=', product.id), // Exclude the current product
+        limit(3)
+      )
+    : null;
+  const { data: relatedProducts, isLoading: areRelatedLoading } = useCollection<Product>(relatedProductsQuery);
+
+  if (isProductLoading) {
+    return <ProductPage.Skeleton />;
+  }
 
   if (!product) {
     return notFound();
@@ -91,10 +79,6 @@ export default function ProductPage({ params }: { params: { id: string } }) {
   
   const productUrl = typeof window !== 'undefined' ? window.location.href : '';
   const shareText = `Check out this product: ${product.name}`;
-
-  const relatedProducts = allProducts.filter(
-    (p) => p.category === product.category && p.id !== product.id
-  ).slice(0, 3);
   
   const getShareUrl = (platform: string) => {
     switch (platform) {
@@ -182,7 +166,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
       </div>
 
       {/* Related Products */}
-      {relatedProducts.length > 0 && (
+      {relatedProducts && relatedProducts.length > 0 && (
         <div className="mt-24">
           <h2 className="text-3xl font-bold text-center mb-8">Related Products</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -196,13 +180,26 @@ export default function ProductPage({ params }: { params: { id: string } }) {
   );
 }
 
-export function generateStaticParams() {
-    // We combine placeholder products with a generic approach for dynamic ones
-    const staticIds = products.map((product) => ({
-        id: product.id,
-    }));
-    
-    // This function runs at build time, so we can't access localStorage here.
-    // Next.js will fallback to on-demand rendering for any ID not in this list.
-    return staticIds;
+ProductPage.Skeleton = function ProductPageSkeleton() {
+    return (
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 animate-pulse">
+            <div className="grid md:grid-cols-2 gap-12">
+                <div className="bg-muted rounded-lg aspect-square"></div>
+                <div className="flex flex-col justify-center space-y-4">
+                    <div className="h-6 w-24 bg-muted rounded"></div>
+                    <div className="h-10 w-3/4 bg-muted rounded"></div>
+                    <div className="space-y-2">
+                        <div className="h-4 w-full bg-muted rounded"></div>
+                        <div className="h-4 w-full bg-muted rounded"></div>
+                        <div className="h-4 w-5/6 bg-muted rounded"></div>
+                    </div>
+                    <div className="h-12 w-1/3 bg-muted rounded"></div>
+                    <div className="flex gap-4">
+                        <div className="h-12 flex-grow bg-muted rounded"></div>
+                        <div className="h-12 w-24 bg-muted rounded"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
 }

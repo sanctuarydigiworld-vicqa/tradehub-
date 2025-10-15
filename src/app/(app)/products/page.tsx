@@ -1,54 +1,33 @@
 
 'use client';
 
-import { products as initialProducts } from '@/lib/placeholder-data';
 import ProductCard from '@/components/product-card';
 import type { Product } from '@/lib/types';
-import { useEffect, useState } from 'react';
+import { useFirebase } from '@/firebase';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import { collection } from 'firebase/firestore';
+
 
 export default function AllProductsPage() {
-  const [products, setProducts] = useState<Product[]>(initialProducts);
-
-  useEffect(() => {
-    try {
-      const localProductsRaw = localStorage.getItem('products');
-      if (localProductsRaw) {
-        const localProducts = JSON.parse(localProductsRaw);
-        const mappedLocalProducts: Product[] = localProducts.map((p: any) => ({
-          id: p.id,
-          name: p.name,
-          description: p.description || '',
-          price: parseFloat(p.price || 0),
-          category: p.category || 'Uncategorized',
-          vendor: 'Current Vendor',
-          image: {
-            id: p.id,
-            imageUrl: p.image,
-            imageHint: 'custom product',
-            description: p.name
-          }
-        }));
-
-        const productMap = new Map();
-        initialProducts.forEach(p => productMap.set(p.id, p));
-        mappedLocalProducts.forEach(p => productMap.set(p.id, p));
-        setProducts(Array.from(productMap.values()));
-      }
-    } catch(e) {
-      console.error("Could not parse products from local storage", e);
-      setProducts(initialProducts);
-    }
-  }, []);
+  const { firestore } = useFirebase();
+  const productsQuery = firestore ? collection(firestore, 'products') : null;
+  const { data: products, isLoading } = useCollection<Product>(productsQuery);
 
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <h1 className="text-4xl font-bold text-center mb-12">All Products</h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-        {products.map((product) => (
+        {isLoading && Array.from({ length: 8 }).map((_, i) => <ProductCard.Skeleton key={i} />)}
+        {!isLoading && products?.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
       </div>
+      {!isLoading && (!products || products.length === 0) && (
+        <div className="col-span-full text-center py-16">
+          <p className="text-muted-foreground">No products have been added yet.</p>
+        </div>
+      )}
     </div>
   );
 }

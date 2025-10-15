@@ -1,42 +1,59 @@
 
-import { products } from '@/lib/placeholder-data';
-import ProductCard from '@/components/product-card';
-import { notFound } from 'next/navigation';
-import { SearchIcon } from 'lucide-react';
+'use client';
 
-export default function SearchPage({
-  searchParams,
-}: {
-  searchParams?: {
-    q?: string;
-  };
-}) {
-  const searchQuery = searchParams?.q || '';
+import ProductCard from '@/components/product-card';
+import { notFound, useSearchParams } from 'next/navigation';
+import { SearchIcon } from 'lucide-react';
+import type { Product } from '@/lib/types';
+import { useFirebase } from '@/firebase';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import { collection } from 'firebase/firestore';
+import { useMemo } from 'react';
+
+export default function SearchPage() {
+  const searchParams = useSearchParams();
+  const searchQuery = searchParams.get('q') || '';
+  
+  const { firestore } = useFirebase();
+  const productsQuery = firestore ? collection(firestore, 'products') : null;
+  const { data: allProducts, isLoading } = useCollection<Product>(productsQuery);
+
+  const filteredProducts = useMemo(() => {
+    if (!allProducts || !searchQuery) return [];
+    return allProducts.filter(product => 
+      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.category.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [allProducts, searchQuery]);
+
+  const recommendedProducts = useMemo(() => {
+    if (!allProducts) return [];
+    return allProducts.slice(0, 4);
+  }, [allProducts]);
+  
 
   if (!searchQuery) {
     notFound();
   }
 
-  const filteredProducts = products.filter(product => 
-    product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    product.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-  
-  const recommendedProducts = products.slice(0, 4);
-
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <h1 className="text-4xl font-bold text-center mb-4">Search Results</h1>
       <p className="text-center text-muted-foreground mb-12">
-        {filteredProducts.length > 0 
+        {isLoading ? 'Searching...' : 
+          filteredProducts.length > 0 
           ? `Found ${filteredProducts.length} results for `
           : `No results found for `
         }
-        <span className="font-semibold text-foreground">&quot;{searchQuery}&quot;</span>
+        {!isLoading && <span className="font-semibold text-foreground">&quot;{searchQuery}&quot;</span>}
       </p>
 
-      {filteredProducts.length > 0 ? (
+      {isLoading ? (
+         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            {Array.from({ length: 4 }).map((_, i) => <ProductCard.Skeleton key={i} />)}
+         </div>
+      ) : filteredProducts.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
           {filteredProducts.map((product) => (
             <ProductCard key={product.id} product={product} />

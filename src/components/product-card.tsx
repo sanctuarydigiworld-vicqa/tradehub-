@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import type { Product } from '@/lib/types';
 import { useCart } from '@/hooks/use-cart.tsx';
 import { Check } from 'lucide-react';
+import { Skeleton } from './ui/skeleton';
 
 type ProductCardProps = {
   product: Product;
@@ -63,4 +64,20 @@ export default function ProductCard({ product }: ProductCardProps) {
       </CardFooter>
     </Card>
   );
+}
+
+ProductCard.Skeleton = function ProductCardSkeleton() {
+    return (
+        <Card className="flex flex-col h-full overflow-hidden">
+            <Skeleton className="w-full aspect-[4/3]" />
+            <CardContent className="p-4 flex-grow">
+                <Skeleton className="h-5 w-20 mb-2" />
+                <Skeleton className="h-6 w-full" />
+            </CardContent>
+            <CardFooter className="p-4 flex justify-between items-center">
+                <Skeleton className="h-8 w-24" />
+                <Skeleton className="h-10 w-32" />
+            </CardFooter>
+        </Card>
+    )
 }

@@ -21,35 +21,53 @@ import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { products as initialProducts } from '@/lib/placeholder-data';
 import Image from 'next/image';
-import { MoreHorizontal, UploadCloud } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { MoreHorizontal, Trash2, UploadCloud } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import type { Product } from '@/lib/types';
-import { useAuth } from '@/hooks/use-auth';
-import { useFirebase } from '@/firebase';
+import { useUser, useFirebase, useMemoFirebase } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, writeBatch } from 'firebase/firestore';
+import { collection, writeBatch, doc, deleteDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 
 export default function ProductsPage() {
   const { firestore } = useFirebase();
-  const { user } = useAuth();
+  const { user } = useUser();
   const { toast } = useToast();
   const [isSeeding, setIsSeeding] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
-  const productsQuery = user ? collection(firestore, 'products') : null;
-  const { data: products, isLoading } = useCollection<Product>(productsQuery as any);
+  const productsQuery = useMemoFirebase(() => {
+    if (firestore && user) {
+        return collection(firestore, 'products');
+    }
+    return null;
+  }, [firestore, user]);
+
+  const { data: products, isLoading } = useCollection<Product>(productsQuery);
 
   const seedData = async () => {
     if (!firestore || !user) return;
     setIsSeeding(true);
     try {
       const batch = writeBatch(firestore);
-      const productsRef = collection(firestore, 'products');
+      const productsCol = collection(firestore, 'products');
 
       initialProducts.forEach(product => {
-        const docRef = collection(productsRef).doc();
+        // Use the placeholder ID for the document ID
+        const docRef = doc(productsCol, product.id);
         batch.set(docRef, { ...product, vendor: user.uid });
       });
 
@@ -70,8 +88,33 @@ export default function ProductsPage() {
     }
   };
 
+  const handleDeleteProduct = async () => {
+    if (!firestore || !productToDelete) return;
+    setIsDeleting(true);
+
+    try {
+        const docRef = doc(firestore, 'products', productToDelete.id);
+        await deleteDoc(docRef);
+        toast({
+            title: 'Product Deleted',
+            description: `${productToDelete.name} has been successfully removed.`,
+        });
+        setProductToDelete(null);
+    } catch (error) {
+        console.error('Error deleting product:', error);
+        toast({
+            title: 'Error Deleting Product',
+            description: 'There was a problem deleting the product.',
+            variant: 'destructive'
+        });
+    } finally {
+        setIsDeleting(false);
+    }
+  }
+
 
   return (
+    <>
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
@@ -79,7 +122,7 @@ export default function ProductsPage() {
           <CardDescription>Manage your product inventory.</CardDescription>
         </div>
         <div className="flex items-center gap-2">
-            <Button onClick={seedData} variant="outline" disabled={isSeeding}>
+            <Button onClick={seedData} variant="outline" disabled={isSeeding || (products && products.length > 0)}>
               <UploadCloud className="mr-2 h-4 w-4" />
               {isSeeding ? 'Seeding...' : 'Seed Products'}
             </Button>
@@ -98,7 +141,7 @@ export default function ProductsPage() {
               <TableHead>Name</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Price</TableHead>
-              <TableHead className="hidden md:table-cell">Created at</TableHead>
+              <TableHead className="hidden md:table-cell">Category</TableHead>
               <TableHead>
                 <span className="sr-only">Actions</span>
               </TableHead>
@@ -128,7 +171,7 @@ export default function ProductsPage() {
                 </TableCell>
                 <TableCell>GH₵{product.price.toFixed(2)}</TableCell>
                 <TableCell className="hidden md:table-cell">
-                  Just now
+                  {product.category}
                 </TableCell>
                 <TableCell>
                   <DropdownMenu>
@@ -140,8 +183,14 @@ export default function ProductsPage() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem>Edit</DropdownMenuItem>
-                      <DropdownMenuItem>Delete</DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                          <Link href={`/dashboard/products/edit/${product.id}`}>Edit</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => setProductToDelete(product)} className="text-red-600 focus:text-red-600 focus:bg-red-50">
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>              
@@ -159,5 +208,23 @@ export default function ProductsPage() {
         </Table>
       </CardContent>
     </Card>
+     <AlertDialog open={!!productToDelete} onOpenChange={(open) => !open && setProductToDelete(null)}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the
+                product <span className="font-semibold">{productToDelete?.name}</span> and remove its data from our servers.
+            </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteProduct} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
+                {isDeleting ? 'Deleting...' : 'Yes, delete it'}
+            </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
