@@ -21,10 +21,10 @@ import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { products as initialProducts } from '@/lib/placeholder-data';
 import Image from 'next/image';
-import { MoreHorizontal, Trash2, UploadCloud } from 'lucide-react';
+import { MoreHorizontal, Trash2, UploadCloud, Pencil } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import type { Product } from '@/lib/types';
-import { useUser, useFirebase, useMemoFirebase } from '@/firebase';
+import { useUser, useFirebase } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, writeBatch, doc, deleteDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -39,6 +39,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useMemoFirebase } from '@/firebase/provider';
 
 
 export default function ProductsPage() {
@@ -51,6 +52,10 @@ export default function ProductsPage() {
 
   const productsQuery = useMemoFirebase(() => {
     if (firestore && user) {
+        // Query products created by the current user
+        // Note: This requires a Firestore index. The app will prompt you to create it if it doesn't exist.
+        // return query(collection(firestore, 'products'), where('vendor', '==', user.uid));
+        // For simplicity now, we fetch all products. In a multi-vendor app, you'd filter by user.uid
         return collection(firestore, 'products');
     }
     return null;
@@ -59,14 +64,21 @@ export default function ProductsPage() {
   const { data: products, isLoading } = useCollection<Product>(productsQuery);
 
   const seedData = async () => {
-    if (!firestore || !user) return;
+    if (!firestore || !user) {
+        toast({
+            title: 'Error',
+            description: 'You must be logged in to seed data.',
+            variant: 'destructive'
+        });
+        return;
+    };
     setIsSeeding(true);
     try {
       const batch = writeBatch(firestore);
       const productsCol = collection(firestore, 'products');
 
       initialProducts.forEach(product => {
-        // Use the placeholder ID for the document ID
+        // Create a new document reference for each placeholder product
         const docRef = doc(productsCol, product.id);
         batch.set(docRef, { ...product, vendor: user.uid });
       });
@@ -184,7 +196,10 @@ export default function ProductsPage() {
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
                       <DropdownMenuItem asChild>
-                          <Link href={`/dashboard/products/edit/${product.id}`}>Edit</Link>
+                          <Link href={`/dashboard/products/edit/${product.id}`}>
+                            <Pencil className="mr-2 h-4 w-4" />
+                            Edit
+                          </Link>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => setProductToDelete(product)} className="text-red-600 focus:text-red-600 focus:bg-red-50">

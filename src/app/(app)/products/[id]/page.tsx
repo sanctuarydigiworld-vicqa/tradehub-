@@ -1,7 +1,6 @@
 
 'use client';
 
-import { products as placeholderProducts } from '@/lib/placeholder-data';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -31,6 +30,7 @@ import { useFirebase } from '@/firebase';
 import { useDoc } from '@/firebase/firestore/use-doc';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { doc, collection, query, where, limit } from 'firebase/firestore';
+import { useMemoFirebase } from '@/firebase/provider';
 
 // SVG for WhatsApp icon as it's not in lucide-react
 const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -54,19 +54,24 @@ export default function ProductPage({ params }: { params: { id: string } }) {
   const { firestore } = useFirebase();
   const { addToCart, isInCart } = useCart();
   
-  const productRef = firestore ? doc(firestore, 'products', params.id) : null;
+  const productRef = useMemoFirebase(() => 
+    firestore ? doc(firestore, 'products', params.id) : null
+  , [firestore, params.id]);
   const { data: product, isLoading: isProductLoading } = useDoc<Product>(productRef);
 
   const isProductInCart = product ? isInCart(product.id) : false;
 
-  const relatedProductsQuery = firestore && product
-    ? query(
-        collection(firestore, 'products'),
-        where('category', '==', product.category),
-        where('__name__', '!=', product.id), // Exclude the current product
-        limit(3)
-      )
-    : null;
+  const relatedProductsQuery = useMemoFirebase(() => 
+    firestore && product
+      ? query(
+          collection(firestore, 'products'),
+          where('category', '==', product.category),
+          where('__name__', '!=', product.id), // Exclude the current product
+          limit(3)
+        )
+      : null
+  , [firestore, product]);
+
   const { data: relatedProducts, isLoading: areRelatedLoading } = useCollection<Product>(relatedProductsQuery);
 
   if (isProductLoading) {
@@ -166,7 +171,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
       </div>
 
       {/* Related Products */}
-      {relatedProducts && relatedProducts.length > 0 && (
+      {!areRelatedLoading && relatedProducts && relatedProducts.length > 0 && (
         <div className="mt-24">
           <h2 className="text-3xl font-bold text-center mb-8">Related Products</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">

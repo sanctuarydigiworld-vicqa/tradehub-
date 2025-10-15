@@ -18,8 +18,10 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useFirebase } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection } from 'firebase/firestore';
+import { collection, query, where, limit } from 'firebase/firestore';
 import type { Product } from '@/lib/types';
+import { useMemoFirebase } from '@/firebase/provider';
+
 
 const AnimatedCart = () => (
   <div className="relative w-24 h-24 mb-4 text-primary">
@@ -102,15 +104,26 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const { firestore } = useFirebase();
-  const productsQuery = firestore ? collection(firestore, 'products') : null;
-  const { data: products, isLoading } = useCollection<Product>(productsQuery);
 
-  const defaultProducts = products ? products.slice(0, 6) : [];
+  const productsCollection = useMemoFirebase(() => 
+    firestore ? collection(firestore, 'products') : null
+  , [firestore]);
 
-  const filteredProducts =
-    selectedCategory && products
-      ? products.filter((product) => product.category === selectedCategory)
-      : defaultProducts;
+  const featuredProductsQuery = useMemoFirebase(() =>
+    productsCollection ? query(productsCollection, limit(6)) : null
+  , [productsCollection]);
+  
+  const categoryProductsQuery = useMemoFirebase(() => 
+    productsCollection && selectedCategory 
+      ? query(productsCollection, where('category', '==', selectedCategory), limit(6)) 
+      : null
+  , [productsCollection, selectedCategory]);
+
+  const { data: allProducts, isLoading: isAllLoading } = useCollection<Product>(featuredProductsQuery);
+  const { data: categoryProducts, isLoading: isCategoryLoading } = useCollection<Product>(categoryProductsQuery);
+
+  const products = selectedCategory ? categoryProducts : allProducts;
+  const isLoading = selectedCategory ? isCategoryLoading : isAllLoading;
 
   const handleCategoryClick = (categoryName: string | null) => {
     setSelectedCategory(categoryName);
@@ -167,11 +180,11 @@ export default function Home() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
               {isLoading && Array.from({ length: 6 }).map((_, i) => <ProductCard.Skeleton key={i} />)}
-              {!isLoading && filteredProducts.map((product) => (
+              {!isLoading && products?.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
-            {!isLoading && filteredProducts.length === 0 && (
+            {!isLoading && (!products || products.length === 0) && (
               <div className="text-center col-span-full py-12">
                 <p className="text-muted-foreground">
                   No products found in this category.

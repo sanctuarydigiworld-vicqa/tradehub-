@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useTransition } from 'react';
 import { generateDescriptionAction } from '@/app/actions';
 import {
   Card,
@@ -27,7 +27,7 @@ import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useFirebase, useUser } from '@/firebase';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, collection } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import type { Product } from '@/lib/types';
 import { categories } from '@/lib/placeholder-data';
@@ -37,11 +37,12 @@ export function AiProductForm({ productId }: { productId?: string }) {
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
   const [productDescription, setProductDescription] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isAiLoading, setIsAiLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isEditMode, setIsEditMode] = useState(!!productId);
   const [product, setProduct] = useState<Partial<Product>>({});
+  const [isPending, startTransition] = useTransition();
 
   const { firestore } = useFirebase();
   const { user } = useUser();
@@ -59,6 +60,12 @@ export function AiProductForm({ productId }: { productId?: string }) {
           setProduct(productData);
           setProductDescription(productData.description || '');
           setImagePreview(productData.image?.imageUrl || null);
+          // Manually set form values if needed, for uncontrolled components or complex state
+          if (formRef.current) {
+            (formRef.current.elements.namedItem('productName') as HTMLInputElement).value = productData.name;
+            (formRef.current.elements.namedItem('price') as HTMLInputElement).value = String(productData.price);
+            (formRef.current.elements.namedItem('productFeatures') as HTMLTextAreaElement).value = productData.features?.join(', ') || '';
+          }
         } else {
           toast({ title: 'Error', description: 'Product not found.', variant: 'destructive'});
           router.push('/dashboard/products');
@@ -70,10 +77,10 @@ export function AiProductForm({ productId }: { productId?: string }) {
 
 
   const handleFormAction = async (formData: FormData) => {
-    setIsLoading(true);
+    setIsAiLoading(true);
     setProductDescription('');
     const result = await generateDescriptionAction(formData);
-    setIsLoading(false);
+    setIsAiLoading(false);
 
     if (result.success && result.description) {
       setProductDescription(result.description);
@@ -102,7 +109,10 @@ export function AiProductForm({ productId }: { productId?: string }) {
   };
 
   const handlePublish = async () => {
-    if (!formRef.current || !firestore || !user) return;
+    if (!formRef.current || !firestore || !user) {
+        toast({ title: 'Error', description: 'User or database not available.', variant: 'destructive'});
+        return;
+    };
     setIsSaving(true);
 
     const formData = new FormData(formRef.current);
@@ -154,13 +164,16 @@ export function AiProductForm({ productId }: { productId?: string }) {
     };
     
     try {
-        await setDoc(doc(firestore, 'products', docId), productData, { merge: isEditMode });
+        await setDoc(doc(firestore, 'products', docId), productData, { merge: true });
         
         toast({
             title: `Product ${isEditMode ? 'Updated' : 'Published'}!`,
-            description: `${productName} has been saved.`,
+            description: `${productName} has been successfully saved.`,
         });
-        router.push('/dashboard/products');
+        startTransition(() => {
+          router.push('/dashboard/products');
+          router.refresh(); // Tries to refresh data for the target route
+        });
 
     } catch (error) {
         console.error("Error saving product:", error);
@@ -299,8 +312,8 @@ export function AiProductForm({ productId }: { productId?: string }) {
             </div>
           </CardContent>
           <CardFooter>
-            <Button type="submit" disabled={isLoading || isSaving}>
-              {isLoading ? (
+            <Button type="submit" disabled={isAiLoading || isSaving}>
+              {isAiLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Generating...
@@ -333,12 +346,13 @@ export function AiProductForm({ productId }: { productId?: string }) {
               className="min-h-[200px]"
               value={productDescription}
               onChange={(e) => setProductDescription(e.target.value)}
+              disabled={isSaving}
             />
           </CardContent>
           <CardFooter className="flex justify-end gap-2">
             <Button variant="outline" disabled={isSaving}>Save as Draft</Button>
-            <Button onClick={handlePublish} disabled={isSaving || isLoading}>
-              {isSaving ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Publish Product')}
+            <Button onClick={handlePublish} disabled={isSaving || isAiLoading || isPending}>
+              {isSaving || isPending ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Publish Product')}
             </Button>
           </CardFooter>
         </Card>

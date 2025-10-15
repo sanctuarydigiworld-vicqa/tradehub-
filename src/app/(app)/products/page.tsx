@@ -6,11 +6,16 @@ import type { Product } from '@/lib/types';
 import { useFirebase } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection } from 'firebase/firestore';
+import { useMemoFirebase } from '@/firebase/provider';
 
 
 export default function AllProductsPage() {
   const { firestore } = useFirebase();
-  const productsQuery = firestore ? collection(firestore, 'products') : null;
+  
+  const productsQuery = useMemoFirebase(() => 
+    firestore ? collection(firestore, 'products') : null
+  , [firestore]);
+
   const { data: products, isLoading } = useCollection<Product>(productsQuery);
 
 

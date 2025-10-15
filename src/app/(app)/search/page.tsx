@@ -9,13 +9,16 @@ import { useFirebase } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection } from 'firebase/firestore';
 import { useMemo } from 'react';
+import { useMemoFirebase } from '@/firebase/provider';
 
 export default function SearchPage() {
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get('q') || '';
   
   const { firestore } = useFirebase();
-  const productsQuery = firestore ? collection(firestore, 'products') : null;
+  const productsQuery = useMemoFirebase(() => 
+    firestore ? collection(firestore, 'products') : null
+  , [firestore]);
   const { data: allProducts, isLoading } = useCollection<Product>(productsQuery);
 
   const filteredProducts = useMemo(() => {
@@ -29,6 +32,7 @@ export default function SearchPage() {
 
   const recommendedProducts = useMemo(() => {
     if (!allProducts) return [];
+    // Simple recommendation: show first 4 products if search yields no results
     return allProducts.slice(0, 4);
   }, [allProducts]);
   
@@ -68,14 +72,16 @@ export default function SearchPage() {
                     We couldn&apos;t find any products matching your search. Try a different keyword.
                 </p>
             </div>
-            <div className="mt-16">
-                <h3 className="text-3xl font-bold text-center mb-8">You May Also Like</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                    {recommendedProducts.map((product) => (
-                        <ProductCard key={product.id} product={product} />
-                    ))}
-                </div>
-            </div>
+            {!isLoading && recommendedProducts.length > 0 && (
+              <div className="mt-16">
+                  <h3 className="text-3xl font-bold text-center mb-8">You May Also Like</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                      {recommendedProducts.map((product) => (
+                          <ProductCard key={product.id} product={product} />
+                      ))}
+                  </div>
+              </div>
+            )}
         </div>
       )}
     </div>

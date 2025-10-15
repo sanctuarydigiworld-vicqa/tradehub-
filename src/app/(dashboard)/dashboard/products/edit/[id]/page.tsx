@@ -1,4 +1,6 @@
 
+'use client';
+
 import { AiProductForm } from "@/components/ai-product-form";
 
 export default function EditProductPage({ params }: { params: { id: string } }) {
