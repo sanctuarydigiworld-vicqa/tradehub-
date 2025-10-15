@@ -12,7 +12,7 @@ import {
   ShieldCheck,
   ShoppingCart,
 } from 'lucide-react';
-import { useAuth, useFirebase } from '@/firebase';
+import { useFirebase, useAuth } from '@/firebase';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

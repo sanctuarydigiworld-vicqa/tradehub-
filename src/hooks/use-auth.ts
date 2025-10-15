@@ -1,24 +1,13 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { useFirebase } from '@/firebase';
+import { useUser } from '@/firebase';
+import type { User } from 'firebase/auth';
 
-export function useAuth() {
-  const { auth } = useFirebase();
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!auth) return;
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [auth]);
-
-  return { user, loading };
+// This hook is now a simple wrapper around the `useUser` hook from the main Firebase provider.
+// It simplifies accessing user data without needing direct dependency on onAuthStateChanged in components.
+export function useAuth(): { user: User | null, loading: boolean } {
+  const { user, isUserLoading } = useUser();
+  
+  return { user, loading: isUserLoading };
 }
