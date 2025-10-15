@@ -1,51 +1,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import * as crypto from 'crypto';
-import twilio from 'twilio';
 import nodemailer from 'nodemailer';
-
-async function sendAdminNotificationSms(payload: any) {
-    console.log("----- ATTEMPTING TO SEND ADMIN SMS NOTIFICATION -----");
-    const { event, data } = payload;
-    
-    if (event !== 'charge.success') {
-        console.log(`Webhook received non-charge event for SMS: ${event}. Ignoring.`);
-        return;
-    }
-
-    const accountSid = process.env.TWILIO_ACCOUNT_SID;
-    const authToken = process.env.TWILIO_AUTH_TOKEN;
-    const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
-    const adminPhoneNumber = process.env.ADMIN_PHONE_NUMBER; // Your personal phone number
-
-    if (!accountSid || !authToken || !twilioPhoneNumber || !adminPhoneNumber) {
-        console.error("CRITICAL: Twilio SMS credentials or ADMIN_PHONE_NUMBER are not fully set in .env file.");
-        return;
-    }
-
-    console.log(`Twilio configured to send from: ${twilioPhoneNumber} to ${adminPhoneNumber}`);
-
-    const client = twilio(accountSid, authToken);
-
-    const customerName = data.metadata?.name || data.customer?.name || 'A Customer';
-    const totalAmount = (data.amount / 100).toFixed(2);
-    const currency = data.currency;
-
-    const body = `New VicqaTradeHub Order!\nRef: ${data.reference}\nCust: ${customerName}\nTotal: ${currency} ${totalAmount}`;
-
-    try {
-        const message = await client.messages.create({
-            body: body,
-            from: twilioPhoneNumber,
-            to: adminPhoneNumber,
-        });
-        console.log("----- TWILIO SMS SENT SUCCESSFULLY -----");
-        console.log("Message SID: %s", message.sid);
-    } catch (error) {
-        console.error("----- FAILED TO SEND TWILIO SMS -----");
-        console.error(error);
-    }
-}
 
 async function sendAdminNotificationEmail(payload: any) {
     console.log("----- ATTEMPTING TO SEND ADMIN EMAIL NOTIFICATION -----");
@@ -66,7 +22,9 @@ async function sendAdminNotificationEmail(payload: any) {
     }
 
     const transporter = nodemailer.createTransport({
-        service: 'gmail',
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true, // use SSL
         auth: {
             user: emailUser,
             pass: emailPass,
@@ -128,11 +86,8 @@ export async function POST(req: NextRequest) {
             payload = JSON.parse(body);
         }
 
-        // Trigger both notifications
-        await Promise.all([
-            sendAdminNotificationSms(payload),
-            sendAdminNotificationEmail(payload)
-        ]);
+        // Trigger notification
+        await sendAdminNotificationEmail(payload);
 
         return new NextResponse('Webhook processed successfully', { status: 200 });
 
