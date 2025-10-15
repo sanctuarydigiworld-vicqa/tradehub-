@@ -12,9 +12,7 @@ import {
   ShieldCheck,
   ShoppingCart,
 } from 'lucide-react';
-import { signOut } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth, useFirebase } from '@/firebase';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,7 +31,8 @@ import { useState } from 'react';
 import { useCart } from '@/hooks/use-cart.tsx';
 
 export default function Header() {
-  const { user, loading } = { user: { email: 'vendor@example.com', displayName: 'Vendor Name' }, loading: false };
+  const { user, isUserLoading } = useFirebase();
+  const auth = useAuth();
   const { toast } = useToast();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
@@ -42,7 +41,7 @@ export default function Header() {
 
   const handleLogout = async () => {
     try {
-      await signOut(auth);
+      await auth.signOut();
       toast({
         title: 'Logged Out',
         description: 'You have been successfully logged out.',
@@ -112,7 +111,7 @@ export default function Header() {
               </Link>
           </Button>
 
-          {!user && !loading && (
+          {!user && !isUserLoading && (
              <Button asChild variant="outline">
                 <Link href="/register">Become a Vendor</Link>
              </Button>
@@ -121,9 +120,11 @@ export default function Header() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                {user ? (
+                {isUserLoading ? (
+                  <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
+                ) : user ? (
                    <Avatar className="h-8 w-8">
-                     <AvatarImage src={(user as any).photoURL || `https://avatar.vercel.sh/${user.email}.png`} alt={user.displayName || user.email || ''} />
+                     <AvatarImage src={user.photoURL || `https://avatar.vercel.sh/${user.email}.png`} alt={user.displayName || user.email || ''} />
                      <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
                    </Avatar>
                 ) : (
