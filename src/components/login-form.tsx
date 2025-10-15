@@ -56,7 +56,7 @@ export function LoginForm() {
         description: 'Welcome!',
       });
       router.push('/dashboard');
-    } catch (error: any) {
+    } catch (error: any) => {
       console.error('Error with Google sign in: ', error);
       toast({
         title: 'Google Sign-In Failed',
