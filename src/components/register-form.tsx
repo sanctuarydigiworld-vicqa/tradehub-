@@ -98,16 +98,16 @@ export function RegisterForm() {
         <div className="grid grid-cols-2 gap-4">
           <div className="grid gap-2">
             <Label htmlFor="first-name">First name</Label>
-            <Input id="first-name" placeholder="Max" required value={firstName} onChange={(e) => setFirstName(e.target.value)} disabled={loading || googleLoading} />
+            <Input id="first-name" placeholder="Quasi" required value={firstName} onChange={(e) => setFirstName(e.target.value)} disabled={loading || googleLoading} />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="last-name">Last name</Label>
-            <Input id="last-name" placeholder="Robinson" required value={lastName} onChange={(e) => setLastName(e.target.value)} disabled={loading || googleLoading} />
+            <Input id="last-name" placeholder="Ahama" required value={lastName} onChange={(e) => setLastName(e.target.value)} disabled={loading || googleLoading} />
           </div>
         </div>
         <div className="grid gap-2">
           <Label htmlFor="store-name">Store Name</Label>
-          <Input id="store-name" placeholder="Max's Goods" required value={storeName} onChange={(e) => setStoreName(e.target.value)} disabled={loading || googleLoading} />
+          <Input id="store-name" placeholder="Quasi's Goods" required value={storeName} onChange={(e) => setStoreName(e.target.value)} disabled={loading || googleLoading} />
         </div>
         <div className="grid gap-2">
           <Label htmlFor="email">Email</Label>
