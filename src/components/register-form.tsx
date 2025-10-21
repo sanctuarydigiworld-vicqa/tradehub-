@@ -55,7 +55,14 @@ export function RegisterForm() {
   };
   
   const handleGoogleSignIn = async () => {
-    if (!auth) return;
+    if (!auth) {
+      toast({
+        title: 'Authentication Error',
+        description: 'Firebase authentication service is not available.',
+        variant: 'destructive',
+      });
+      return;
+    }
     setGoogleLoading(true);
     const provider = new GoogleAuthProvider();
     try {
@@ -66,10 +73,18 @@ export function RegisterForm() {
       });
       router.push('/dashboard');
     } catch (error: any) {
-      console.error('Error with Google sign in: ', error);
+      console.error('Error with Google sign up: ', error);
+       let description = 'Could not sign up with Google. Please try again.';
+      // Catch specific errors for better user feedback
+      if (error.code === 'auth/popup-closed-by-user') {
+        description = 'The sign-up window was closed before completing. Please try again.';
+      } else if (error.code === 'auth/account-exists-with-different-credential') {
+        description = 'An account already exists with the same email address but different sign-in credentials.';
+      }
+      
       toast({
         title: 'Google Sign-Up Failed',
-        description: error.message || 'Could not sign up with Google. Please try again.',
+        description: description,
         variant: 'destructive',
       });
     } finally {
